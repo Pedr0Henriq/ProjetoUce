@@ -1,0 +1,581 @@
+# Documento de Requisitos
+## Projeto: Gestão de Ligas
+**Versão 1.0**
+
+**Equipe Responsável:**
+José Alisson Rocha da Silva (20200022829)
+
+João Pessoa, 2026
+
+---
+
+## Sumário
+
+1. [Introdução](#1-introdução)
+   - 1.1 [Propósito do documento](#11-propósito-do-documento)
+   - 1.2 [Visão geral do documento](#12-visão-geral-do-documento)
+2. [Descrição Geral](#2-descrição-geral)
+   - 2.1 [Motivação](#21-motivação)
+   - 2.2 [Problemas identificados](#22-problemas-identificados)
+   - 2.3 [Visão geral do sistema](#23-visão-geral-do-sistema)
+   - 2.4 [Usuários do sistema](#24-usuários-do-sistema)
+   - 2.5 [Suposições e restrições gerais](#25-suposições-e-restrições-gerais)
+3. [Análise de Requisitos](#3-análise-de-requisitos)
+   - 3.1 [Requisitos funcionais](#31-requisitos-funcionais)
+   - 3.2 [Requisitos não funcionais](#32-requisitos-não-funcionais)
+4. [Descrição da Interface com o Usuário](#4-descrição-da-interface-com-o-usuário)
+   - 4.1 [Tela de Autenticação](#41-tela-de-autenticação)
+   - 4.2 [Tela Principal – Lista de Campeonatos](#42-tela-principal--lista-de-campeonatos)
+   - 4.3 [Painel do Campeonato](#43-painel-do-campeonato)
+   - 4.4 [Tela de Registro de Resultado](#44-tela-de-registro-de-resultado)
+   - 4.5 [Tela de Ficha do Time](#45-tela-de-ficha-do-time)
+   - 4.6 [Tela de Súmula Eletrônica](#46-tela-de-súmula-eletrônica)
+5. [Modelo de Dados](#5-modelo-de-dados)
+   - 5.1 [Entidades Principais](#51-entidades-principais)
+   - 5.2 [Relacionamentos](#52-relacionamentos)
+   - 5.3 [Regras de Negócio do Modelo](#53-regras-de-negócio-do-modelo)
+
+---
+
+## 1. Introdução
+
+### 1.1 Propósito do documento
+
+Este documento tem como objetivo formalizar os requisitos funcionais e não funcionais do sistema **Gestão de Ligas**, uma plataforma mobile multiplataforma voltada à organização de campeonatos esportivos comunitários. Destina-se aos membros da equipe de desenvolvimento, ao orientador do projeto e a demais partes interessadas, servindo como referência técnica durante todo o ciclo de desenvolvimento.
+
+O documento define o escopo do sistema, descreve os usuários envolvidos, especifica os casos de uso e as restrições que devem ser observadas na construção da solução.
+
+### 1.2 Visão geral do documento
+
+Este documento está organizado nas seguintes seções:
+
+- **Seção 2 – Descrição Geral:** apresenta o contexto, a motivação, os problemas identificados, a visão geral do sistema, seus usuários e as restrições aplicáveis.
+- **Seção 3 – Análise de Requisitos:** especifica os requisitos funcionais (casos de uso) e os requisitos não funcionais do sistema, organizados por categoria.
+- **Seção 4 – Descrição da Interface com o Usuário:** apresenta rascunhos e descrições das telas principais do aplicativo mobile.
+- **Seção 5 – Modelo de Dados:** descreve as entidades principais e seus relacionamentos no banco de dados PostgreSQL.
+
+---
+
+## 2. Descrição Geral
+
+### 2.1 Motivação
+
+O esporte comunitário desempenha papel fundamental na promoção da saúde, no fortalecimento de vínculos sociais e no fomento à cultura local. Campeonatos de bairro, ligas universitárias e torneios beneficentes reúnem centenas de participantes e torcedores, movimentando a comunidade e promovendo hábitos saudáveis.
+
+Apesar do expressivo engajamento social, a gestão desses eventos ainda é realizada, em grande parte, de forma manual: planilhas compartilhadas, grupos de WhatsApp e registros em papel são os instrumentos mais comuns. Essa abordagem fragmentada gera ruídos de comunicação, perda de histórico e dificuldade de acesso transparente às informações pelos participantes.
+
+A ausência de uma ferramenta dedicada impede que organizadores, atletas e torcedores tenham acesso rápido e confiável a resultados, classificações e estatísticas, comprometendo a experiência e a credibilidade dos torneios.
+
+### 2.2 Problemas identificados
+
+A partir do contexto descrito, foram identificados os seguintes problemas que o sistema se propõe a resolver:
+
+- Gestão descentralizada de resultados e tabelas, realizada por múltiplos canais sem controle de versão.
+- Ausência de histórico estruturado de competições, impedindo consulta de edições anteriores.
+- Dificuldade de acesso à classificação atualizada por parte dos torcedores e atletas.
+- Erros manuais no cálculo de pontuação, saldo de gols e critérios de desempate.
+- Falta de registro eletrônico de eventos de partida (gols, cartões, assistências), reduzindo a transparência.
+- Comunicação de resultados dependente da disponibilidade do organizador para publicação manual.
+
+### 2.3 Visão geral do sistema
+
+O sistema **Gestão de Ligas** é uma plataforma mobile multiplataforma, desenvolvida em Flutter, que centraliza a organização de campeonatos esportivos comunitários. O backend é implementado em Python com o framework Flask, responsável pelas regras de negócio, cálculo de pontuações e critérios de desempate. O banco de dados utilizado é o PostgreSQL, armazenando times, jogadores, partidas e súmulas eletrônicas.
+
+O sistema é independente e totalmente auto-contido, não possuindo integração obrigatória com sistemas externos. A comunicação entre o aplicativo mobile e o backend ocorre via API REST com respostas em formato JSON.
+
+**Principais funcionalidades contempladas:**
+
+- Autenticação e controle de permissões por perfil de usuário.
+- Criação e gerenciamento completo de campeonatos, times e jogadores.
+- Geração automática de calendário de partidas para os formatos pontos corridos e eliminatória.
+- Registro de resultados e eventos de partida com atualização automática de estatísticas e classificação.
+- Exibição pública de tabelas de classificação e estatísticas individuais e coletivas.
+
+**Funcionalidades que não serão contempladas nesta versão:**
+
+- Integração com sistemas de pagamento ou cobrança de inscrição.
+- Transmissão ao vivo de partidas ou streaming de vídeo.
+- Módulo de gestão financeira dos campeonatos.
+- Notificações push automatizadas para todos os usuários.
+
+### 2.4 Usuários do sistema
+
+O sistema possui dois perfis de usuário distintos:
+
+**Administrador**
+Responsável pela gestão completa do campeonato. Possui permissão para criar e configurar competições, cadastrar times e jogadores, definir calendário de partidas e registrar resultados e eventos de jogo. Tipicamente é o organizador do torneio, com conhecimento básico de navegação em aplicativos mobile.
+
+**Analista (Visualizador)**
+Usuário com acesso de leitura ao sistema. Pode consultar classificações, estatísticas, calendários e resultados de partidas, mas não possui permissão para realizar operações de escrita. Engloba atletas, torcedores e demais interessados no acompanhamento do campeonato.
+
+### 2.5 Suposições e restrições gerais
+
+As seguintes suposições e restrições foram consideradas na definição dos requisitos:
+
+- O sistema será utilizado em dispositivos móveis com sistema operacional Android ou iOS.
+- É necessário acesso à internet para utilizar o aplicativo, pois os dados são armazenados remotamente.
+- O backend será implantado em servidor Linux com suporte a Python 3.10+ e PostgreSQL 14+.
+- A equipe de desenvolvimento é composta por três integrantes com conhecimento em Flutter, Flask e PostgreSQL.
+- O escopo desta versão cobre campeonatos de modalidade única (futebol de campo ou salão), sem suporte a múltiplos esportes simultâneos.
+- Senhas e dados sensíveis devem ser protegidos conforme boas práticas de segurança, sendo armazenados de forma criptografada.
+- O sistema deve suportar ao menos 20 campeonatos simultâneos, cada um com até 32 times e 500 jogadores cadastrados.
+
+---
+
+## 3. Análise de Requisitos
+
+### 3.1 Requisitos funcionais
+
+---
+
+#### RF 01 — Autenticar Usuário
+
+| Campo | Descrição |
+|-------|-----------|
+| **Descrição** | O sistema deve permitir autenticação por login (e-mail) e senha antes do acesso às funcionalidades protegidas. Deve oferecer suporte a recuperação de senha via e-mail. |
+| **Prioridade** | Essencial |
+
+---
+
+#### RF 02 — Controlar Permissões por Perfil
+
+| Campo | Descrição |
+|-------|-----------|
+| **Descrição** | O sistema deve restringir funcionalidades conforme o perfil do usuário (Administrador ou Analista), impedindo que usuários não autorizados realizem operações de escrita, configuração ou exclusão. |
+| **Prioridade** | Essencial |
+
+---
+
+#### RF 03 — Criar e Gerenciar Campeonatos
+
+| Campo | Descrição |
+|-------|-----------|
+| **Descrição** | O sistema deve permitir ao Administrador cadastrar, editar, listar e excluir campeonatos, informando nome, modalidade, tipo de competição (pontos corridos ou eliminatória), número de equipes participantes e data de início. |
+| **Prioridade** | Essencial |
+
+---
+
+#### RF 04 — Registrar Resultados de Partidas
+
+| Campo | Descrição |
+|-------|-----------|
+| **Descrição** | O sistema deve permitir ao Administrador registrar o placar final e os eventos da partida (gols, assistências e cartões), atualizando automaticamente a classificação e as estatísticas individuais e coletivas. |
+| **Prioridade** | Essencial |
+
+---
+
+#### RF 05 — Cadastrar e Gerenciar Times
+
+| Campo | Descrição |
+|-------|-----------|
+| **Descrição** | O sistema deve permitir o cadastro, edição, listagem e remoção de times, contendo nome, escudo (imagem) e localidade, bem como sua vinculação a um campeonato específico. |
+| **Prioridade** | Importante |
+
+---
+
+#### RF 06 — Cadastrar e Gerenciar Jogadores
+
+| Campo | Descrição |
+|-------|-----------|
+| **Descrição** | O sistema deve permitir o cadastro, edição e remoção de jogadores vinculados a um time, contendo nome completo, posição e número de camisa (opcional). |
+| **Prioridade** | Importante |
+
+---
+
+#### RF 07 — Gerar Calendário Automaticamente
+
+| Campo | Descrição |
+|-------|-----------|
+| **Descrição** | O sistema deve gerar automaticamente os confrontos conforme o formato da competição (pontos corridos ou eliminatória), organizando as rodadas de forma válida, sem repetição de confrontos na mesma rodada. |
+| **Prioridade** | Importante |
+
+---
+
+#### RF 08 — Cadastrar e Gerenciar Partidas
+
+| Campo | Descrição |
+|-------|-----------|
+| **Descrição** | O sistema deve permitir ao Administrador definir data, horário, local (nome textual do estádio/campo) e equipes participantes para cada partida, podendo editar ou excluir partidas não finalizadas. |
+| **Prioridade** | Importante |
+
+---
+
+#### RF 09 — Gerar Classificação Automática
+
+| Campo | Descrição |
+|-------|-----------|
+| **Descrição** | O sistema deve calcular automaticamente a tabela de classificação com base nos resultados registrados, considerando pontos, saldo de gols, gols marcados e, em caso de empate, confronto direto. |
+| **Prioridade** | Importante |
+
+---
+
+#### RF 10 — Exibir Estatísticas Básicas
+
+| Campo | Descrição |
+|-------|-----------|
+| **Descrição** | O sistema deve apresentar estatísticas por jogador (gols, assistências e cartões) e por time (jogos disputados, vitórias, empates, derrotas, gols pró, gols contra, saldo e pontos). |
+| **Prioridade** | Importante |
+
+---
+
+#### RF 11 — Encerrar Sessão
+
+| Campo | Descrição |
+|-------|-----------|
+| **Descrição** | O sistema deve permitir que o usuário finalize sua sessão de forma segura (logout), invalidando o token de autenticação no servidor. |
+| **Prioridade** | Importante |
+
+---
+
+#### RF 12 — Gerenciar Perfil de Usuário
+
+| Campo | Descrição |
+|-------|-----------|
+| **Descrição** | O sistema deve permitir que o usuário edite seus dados cadastrais (nome, e-mail e senha) diretamente no aplicativo. |
+| **Prioridade** | Desejável |
+
+---
+
+#### RF 13 — Visualizar Histórico de Partidas
+
+| Campo | Descrição |
+|-------|-----------|
+| **Descrição** | O sistema deve exibir o histórico completo de partidas de um time ou campeonato, incluindo datas, adversários, placares e eventos registrados. |
+| **Prioridade** | Importante |
+
+---
+
+#### RF 14 — Encerrar Campeonato
+
+| Campo | Descrição |
+|-------|-----------|
+| **Descrição** | O sistema deve permitir ao Administrador encerrar formalmente um campeonato, registrando o campeão e impedindo novos registros de resultados após o encerramento. O campeonato encerrado deve permanecer acessível para consulta histórica. |
+| **Prioridade** | Importante |
+
+---
+
+#### RF 15 — Buscar Campeonatos, Times e Jogadores
+
+| Campo | Descrição |
+|-------|-----------|
+| **Descrição** | O sistema deve disponibilizar mecanismo de busca por nome para campeonatos, times e jogadores, retornando resultados em tempo real conforme a digitação. |
+| **Prioridade** | Desejável |
+
+---
+
+#### RF 16 — Gerenciar Súmula Eletrônica
+
+| Campo | Descrição |
+|-------|-----------|
+| **Descrição** | O sistema deve gerar e exibir a súmula eletrônica de cada partida, contendo: data, local, times, escalações, eventos registrados (gols, cartões, assistências) e placar final. |
+| **Prioridade** | Importante |
+
+---
+
+#### RF 17 — Cadastrar Administradores Adicionais
+
+| Campo | Descrição |
+|-------|-----------|
+| **Descrição** | O sistema deve permitir que um Administrador cadastre outros usuários no perfil Administrador para um determinado campeonato, possibilitando cogestão do torneio. |
+| **Prioridade** | Desejável |
+
+---
+
+### 3.2 Requisitos não funcionais
+
+Os requisitos não funcionais estão organizados pelas categorias de qualidade aplicáveis ao sistema.
+
+#### Usabilidade
+
+---
+
+##### NF 01 — Interface Intuitiva
+
+| Campo | Descrição |
+|-------|-----------|
+| **Descrição** | O sistema deve apresentar navegação clara e organizada, permitindo acesso às principais funcionalidades em no máximo três interações a partir da tela inicial. Usuários sem treinamento prévio devem conseguir realizar as operações básicas (consultar classificação, visualizar partidas) sem auxílio. |
+| **Prioridade** | Essencial |
+| **Categoria** | Usabilidade |
+
+---
+
+##### NF 02 — Facilidade de Registro de Resultado
+
+| Campo | Descrição |
+|-------|-----------|
+| **Descrição** | O Administrador deve conseguir registrar o resultado completo de uma partida (placar e eventos) em até 2 minutos após acessar a tela correspondente. |
+| **Prioridade** | Importante |
+| **Categoria** | Usabilidade |
+
+---
+
+##### NF 03 — Mensagens Padronizadas
+
+| Campo | Descrição |
+|-------|-----------|
+| **Descrição** | O sistema deve apresentar mensagens claras, objetivas e padronizadas para sucesso, erro e confirmação de operações, evitando jargões técnicos. |
+| **Prioridade** | Importante |
+| **Categoria** | Usabilidade |
+
+---
+
+##### NF 04 — Confirmação de Operações Críticas
+
+| Campo | Descrição |
+|-------|-----------|
+| **Descrição** | O sistema deve solicitar confirmação explícita antes de executar operações irreversíveis, tais como exclusão de campeonatos, times, jogadores ou partidas. |
+| **Prioridade** | Importante |
+| **Categoria** | Usabilidade |
+
+---
+
+##### NF 05 — Responsividade Visual
+
+| Campo | Descrição |
+|-------|-----------|
+| **Descrição** | A interface deve se adaptar corretamente a diferentes tamanhos de tela de smartphones (4,7'' a 6,9''), mantendo legibilidade e usabilidade em qualquer resolução. |
+| **Prioridade** | Importante |
+| **Categoria** | Usabilidade |
+
+---
+
+#### Desempenho
+
+---
+
+##### NF 06 — Tempo de Resposta Adequado
+
+| Campo | Descrição |
+|-------|-----------|
+| **Descrição** | O sistema deve apresentar tempo de resposta inferior a 2 segundos para o carregamento de listagens de campeonatos, partidas e classificação, considerando até 1.000 registros armazenados e conexão de pelo menos 5 Mbps. |
+| **Prioridade** | Essencial |
+| **Categoria** | Desempenho |
+
+---
+
+##### NF 07 — Atualização Imediata da Classificação
+
+| Campo | Descrição |
+|-------|-----------|
+| **Descrição** | A tabela de classificação deve ser recalculada e exibida em até 1 segundo após o registro de um resultado de partida. |
+| **Prioridade** | Essencial |
+| **Categoria** | Desempenho |
+
+---
+
+##### NF 08 — Suporte a Carga Simultânea
+
+| Campo | Descrição |
+|-------|-----------|
+| **Descrição** | O backend deve suportar ao menos 50 requisições simultâneas sem degradação perceptível de desempenho (aumento superior a 30% no tempo de resposta). |
+| **Prioridade** | Importante |
+| **Categoria** | Desempenho |
+
+---
+
+#### Segurança
+
+---
+
+##### NF 09 — Armazenamento Seguro de Credenciais
+
+| Campo | Descrição |
+|-------|-----------|
+| **Descrição** | As senhas dos usuários devem ser armazenadas de forma criptografada utilizando algoritmo bcrypt ou equivalente. Senhas em texto puro não devem existir em nenhuma camada do sistema. |
+| **Prioridade** | Essencial |
+| **Categoria** | Segurança |
+
+---
+
+##### NF 10 — Autenticação via JWT
+
+| Campo | Descrição |
+|-------|-----------|
+| **Descrição** | O sistema deve utilizar tokens JWT (JSON Web Tokens) com tempo de expiração configurável para autenticar requisições ao backend, invalidando sessões expiradas automaticamente. |
+| **Prioridade** | Essencial |
+| **Categoria** | Segurança |
+
+---
+
+##### NF 11 — Validação de Acesso por Perfil
+
+| Campo | Descrição |
+|-------|-----------|
+| **Descrição** | O backend deve validar as permissões do usuário autenticado em cada endpoint protegido, rejeitando requisições de perfis não autorizados com código HTTP 403. |
+| **Prioridade** | Essencial |
+| **Categoria** | Segurança |
+
+---
+
+#### Confiabilidade
+
+---
+
+##### NF 12 — Consistência de Dados
+
+| Campo | Descrição |
+|-------|-----------|
+| **Descrição** | O sistema deve impedir o registro duplicado de resultados para a mesma partida e garantir que os eventos de jogo (gols, cartões) estejam vinculados apenas a jogadores pertencentes aos times participantes. |
+| **Prioridade** | Essencial |
+| **Categoria** | Confiabilidade |
+
+---
+
+##### NF 13 — Validação de Integridade
+
+| Campo | Descrição |
+|-------|-----------|
+| **Descrição** | O sistema deve validar todos os dados inseridos, impedindo cadastro de informações inválidas, campos obrigatórios vazios ou formatos incorretos. Mensagens de erro específicas devem indicar o campo e o problema ao usuário. |
+| **Prioridade** | Essencial |
+| **Categoria** | Confiabilidade |
+
+---
+
+##### NF 14 — Tratamento de Falhas de Conexão
+
+| Campo | Descrição |
+|-------|-----------|
+| **Descrição** | O aplicativo deve tratar adequadamente falhas de conexão com o backend, exibindo mensagem amigável ao usuário e preservando os dados em preenchimento para nova tentativa. |
+| **Prioridade** | Importante |
+| **Categoria** | Confiabilidade |
+
+---
+
+#### Manutenibilidade
+
+---
+
+##### NF 15 — Arquitetura Modular
+
+| Campo | Descrição |
+|-------|-----------|
+| **Descrição** | O backend deve possuir separação clara entre as camadas de autenticação, gestão de campeonatos, partidas e estatísticas (padrão MVC ou equivalente), permitindo manutenção e evolução independentes dos módulos. |
+| **Prioridade** | Importante |
+| **Categoria** | Manutenibilidade |
+
+---
+
+##### NF 16 — Facilidade de Evolução
+
+| Campo | Descrição |
+|-------|-----------|
+| **Descrição** | O sistema deve ser estruturado de forma a permitir a inclusão futura de novas modalidades esportivas e formatos de competição sem necessidade de reestruturação significativa no domínio central. |
+| **Prioridade** | Desejável |
+| **Categoria** | Manutenibilidade |
+
+---
+
+## 4. Descrição da Interface com o Usuário
+
+Esta seção descreve as telas principais do aplicativo mobile, detalhando os elementos de interface, fluxos de navegação e comportamentos esperados. O aplicativo é desenvolvido em Flutter e segue os princípios do **Material Design 3**.
+
+### 4.1 Tela de Autenticação
+
+Tela inicial exibida ao abrir o aplicativo. Contém:
+
+- Logo e nome do aplicativo centralizados.
+- Campo de e-mail com validação de formato.
+- Campo de senha com opção de exibir/ocultar o conteúdo.
+- Botão principal **"Entrar"** que aciona o fluxo de autenticação (RF 01).
+- Link **"Esqueci minha senha"** que direciona ao fluxo de recuperação de senha.
+
+> **Comportamento:** Em caso de credenciais inválidas, uma mensagem de erro padronizada é exibida abaixo do formulário (NF 03). O botão "Entrar" é desabilitado durante o processamento da requisição para evitar submissões duplicadas.
+
+### 4.2 Tela Principal – Lista de Campeonatos
+
+Tela inicial pós-autenticação. Exibe:
+
+- Barra superior com saudação ao usuário logado e botão de logout.
+- Campo de busca para filtrar campeonatos por nome (RF 15).
+- Lista de campeonatos disponíveis, com nome, status (Em andamento / Encerrado) e data de início.
+- Botão de ação flutuante (FAB) visível apenas para Administradores, para criação de novo campeonato (RF 03).
+
+> Ao selecionar um campeonato, o usuário é direcionado ao painel do campeonato.
+
+### 4.3 Painel do Campeonato
+
+Tela central de um campeonato específico, organizada em abas:
+
+- **Aba Classificação:** exibe a tabela de classificação completa com posição, escudo, nome, J, V, E, D, GP, GC, SG e PTS (RF 09).
+- **Aba Partidas:** calendário de rodadas com data, horário, times e placar. Partidas pendentes exibem "x" no placar; finalizadas exibem o resultado (RF 08).
+- **Aba Artilharia:** ranking de artilheiros e líderes em assistências (RF 10).
+- **Aba Times:** lista de times participantes com acesso à ficha de cada time (RF 05).
+
+> Administradores visualizam botões adicionais para editar campeonato, adicionar rodadas e registrar resultados.
+
+### 4.4 Tela de Registro de Resultado
+
+Acessível apenas por Administradores. Exibe:
+
+- Nome dos dois times com seus escudos.
+- Campos numéricos para placar do time mandante e visitante.
+- Seção de eventos: botão para adicionar evento (gol, assistência, cartão amarelo, cartão vermelho), selecionando o jogador responsável a partir de lista dos times envolvidos.
+- Lista de eventos adicionados com opção de remoção.
+- Botão **"Finalizar Partida"** que salva o resultado, atualiza a classificação e bloqueia novas edições (RF 04).
+
+> A tela exibe confirmação antes de finalizar a partida (NF 04), informando que a operação não poderá ser desfeita.
+
+### 4.5 Tela de Ficha do Time
+
+Exibe informações detalhadas de um time:
+
+- Escudo, nome e localidade do time.
+- Estatísticas gerais no campeonato atual: posição, pontos, gols pró e contra.
+- Lista de jogadores com nome, número e posição.
+- Histórico de partidas do time (RF 13).
+
+> Administradores visualizam botões para editar dados do time, adicionar e remover jogadores (RF 05, RF 06).
+
+### 4.6 Tela de Súmula Eletrônica
+
+Exibida ao selecionar uma partida finalizada. Contém:
+
+- Data, horário e local da partida.
+- Times com seus escudos e placar final destacado.
+- Linha do tempo de eventos: cada evento exibe ícone (bola, cartão), minuto, nome do jogador e time.
+- Escalações dos dois times.
+
+> A súmula é somente leitura e acessível a todos os perfis de usuário (RF 16).
+
+---
+
+## 5. Modelo de Dados
+
+Esta seção descreve as entidades principais do banco de dados PostgreSQL e seus relacionamentos, suportando todas as funcionalidades especificadas nos requisitos funcionais.
+
+### 5.1 Entidades Principais
+
+| Entidade | Atributos Principais | Descrição |
+|----------|---------------------|-----------|
+| **Usuario** | id, nome, email, senha_hash, perfil, criado_em | Usuário autenticado do sistema. O perfil pode ser Administrador ou Analista. |
+| **Campeonato** | id, nome, modalidade, tipo, num_equipes, data_inicio, status, criado_por | Representa um torneio. O tipo define o formato: pontos corridos ou eliminatória. |
+| **Time** | id, nome, localidade, escudo_url, campeonato_id | Equipe participante de um campeonato. Vinculado a um único campeonato por vez. |
+| **Jogador** | id, nome, numero, posicao, time_id | Atleta pertencente a um time. O número de camisa é opcional. |
+| **Partida** | id, campeonato_id, rodada, time_mandante_id, time_visitante_id, data, horario, local, status | Confronto entre dois times. O status pode ser Agendada, Em andamento ou Finalizada. |
+| **Resultado** | id, partida_id, gols_mandante, gols_visitante, registrado_por, registrado_em | Placar final de uma partida. Associado a exatamente uma partida. |
+| **EventoPartida** | id, partida_id, tipo, minuto, jogador_id, time_id | Evento ocorrido durante a partida: gol, assistência, cartão amarelo ou vermelho. |
+| **Classificacao** | id, campeonato_id, time_id, pontos, jogos, vitorias, empates, derrotas, gols_pro, gols_contra | Registro calculado automaticamente após cada resultado registrado. |
+
+### 5.2 Relacionamentos
+
+Os principais relacionamentos entre as entidades são:
+
+- Um **Campeonato** possui muitos **Times** (1:N).
+- Um **Time** possui muitos **Jogadores** (1:N).
+- Um **Campeonato** possui muitas **Partidas** (1:N).
+- Uma **Partida** possui zero ou um **Resultado** (1:0..1).
+- Uma **Partida** possui muitos **EventosDePartida** (1:N).
+- Um **EventoDePartida** está vinculado a um **Jogador** (N:1).
+- Um **Campeonato** possui muitos registros de **Classificacao**, um por Time (1:N).
+- Um **Usuario** criador está associado a muitos **Campeonatos** (1:N).
+
+### 5.3 Regras de Negócio do Modelo
+
+As seguintes regras são aplicadas no backend para garantir integridade dos dados:
+
+- Um time não pode estar cadastrado em dois campeonatos ativos simultaneamente.
+- Um jogador vinculado em um `EventoDePartida` deve pertencer a um dos dois times da partida.
+- A entidade `Classificacao` é atualizada automaticamente via lógica no backend após cada inserção ou atualização de `Resultado`.
+- Um `Resultado` só pode ser registrado se a `Partida` estiver com status `Agendada` ou `Em andamento`.
+- Após a inserção de um `Resultado`, o status da `Partida` é automaticamente alterado para `Finalizada`.
+- Campeonatos com status `Encerrado` não aceitam novos `Resultados` ou `EventosDePartida`.
