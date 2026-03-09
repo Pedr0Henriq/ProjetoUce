@@ -1,0 +1,69 @@
+enum TipoCampeonato { pontoCorrido, eliminatoria }
+
+enum StatusCampeonato { emAndamento, encerrado }
+
+class Campeonato {
+  final int id;
+  final String nome;
+  final String modalidade;
+  final TipoCampeonato tipo;
+  final int numEquipes;
+  final DateTime dataInicio;
+  final StatusCampeonato status;
+  final int criadoPor;
+
+  const Campeonato({
+    required this.id,
+    required this.nome,
+    required this.modalidade,
+    required this.tipo,
+    required this.numEquipes,
+    required this.dataInicio,
+    required this.status,
+    required this.criadoPor,
+  });
+
+  factory Campeonato.fromJson(Map<String, dynamic> json) {
+    return Campeonato(
+      id: json['id'] as int,
+      nome: json['nome'] as String,
+      modalidade: json['modalidade'] as String,
+      tipo: json['tipo'] == 'ponto_corrido'
+          ? TipoCampeonato.pontoCorrido
+          : TipoCampeonato.eliminatoria,
+      numEquipes: json['num_equipes'] as int,
+      dataInicio: DateTime.parse(json['data_inicio'] as String),
+      status: json['status'] == 'em_andamento'
+          ? StatusCampeonato.emAndamento
+          : StatusCampeonato.encerrado,
+      criadoPor: json['criado_por'] as int,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'nome': nome,
+      'modalidade': modalidade,
+      'tipo': tipo == TipoCampeonato.pontoCorrido
+          ? 'ponto_corrido'
+          : 'eliminatoria',
+      'num_equipes': numEquipes,
+      'data_inicio': dataInicio.toIso8601String(),
+      'status': status == StatusCampeonato.emAndamento
+          ? 'em_andamento'
+          : 'encerrado',
+      'criado_por': criadoPor,
+    };
+  }
+
+  String get tipoFormatado => tipo == TipoCampeonato.pontoCorrido
+      ? 'Pontos Corridos'
+      : 'Eliminatória';
+
+  String get statusFormatado => status == StatusCampeonato.emAndamento
+      ? 'Em andamento'
+      : 'Encerrado';
+
+  bool get isEncerrado => status == StatusCampeonato.encerrado;
+}
