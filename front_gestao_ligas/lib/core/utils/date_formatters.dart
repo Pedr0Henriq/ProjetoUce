@@ -6,7 +6,7 @@ class DateFormatters {
 
   static final _dateFmt = DateFormat('dd/MM/yyyy');
   static final _dateTimeFmt = DateFormat('dd/MM/yyyy HH:mm');
-  static final _timeFmt = DateFormat('HH:mm');
+  //static final _timeFmt = DateFormat('HH:mm');
 
   static String data(DateTime? date) {
     if (date == null) return 'A definir';

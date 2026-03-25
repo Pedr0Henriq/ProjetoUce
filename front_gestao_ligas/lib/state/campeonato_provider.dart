@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../data/repositories.dart';
+import 'package:front_gestao_ligas/data/database/repositories/campeonato_repository.dart';
 import '../models/models.dart';
 
 /// Estado de campeonatos (RF 03, RF 14, RF 15)
@@ -106,6 +106,9 @@ class CampeonatoProvider extends ChangeNotifier {
     try {
       await _repo.excluir(id);
       _campeonatos.removeWhere((c) => c.id == id);
+      if (_campeonatoAtual?.id == id) {
+        _campeonatoAtual = null;
+      }
       _isLoading = false;
       notifyListeners();
       return true;

@@ -32,7 +32,7 @@ class _JogadorFormScreenState extends State<JogadorFormScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     final provider = context.read<JogadorProvider>();
-    final success = await provider.criar({
+    final success = await provider.criar(widget.timeId, {
       'nome': _nomeController.text.trim(),
       'numero': _numeroController.text.trim().isNotEmpty
           ? int.tryParse(_numeroController.text.trim())
@@ -91,13 +91,10 @@ class _JogadorFormScreenState extends State<JogadorFormScreen> {
                 items: const [
                   DropdownMenuItem(value: 'Goleiro', child: Text('Goleiro')),
                   DropdownMenuItem(value: 'Zagueiro', child: Text('Zagueiro')),
-                  DropdownMenuItem(
-                      value: 'Lateral', child: Text('Lateral')),
+                  DropdownMenuItem(value: 'Lateral', child: Text('Lateral')),
                   DropdownMenuItem(value: 'Volante', child: Text('Volante')),
-                  DropdownMenuItem(
-                      value: 'Meia', child: Text('Meia')),
-                  DropdownMenuItem(
-                      value: 'Atacante', child: Text('Atacante')),
+                  DropdownMenuItem(value: 'Meia', child: Text('Meia')),
+                  DropdownMenuItem(value: 'Atacante', child: Text('Atacante')),
                 ],
                 onChanged: (v) => setState(() => _posicao = v!),
               ),

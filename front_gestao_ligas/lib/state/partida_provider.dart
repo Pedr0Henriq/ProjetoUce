@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../data/repositories.dart';
+import 'package:front_gestao_ligas/data/database/repositories/partida_repository.dart';
 import '../models/models.dart';
 
 /// Estado de partidas e resultados (RF 04, RF 07, RF 08, RF 13, RF 16)

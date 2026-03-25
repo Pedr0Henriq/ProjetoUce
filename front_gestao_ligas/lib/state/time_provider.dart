@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../data/repositories.dart';
+import 'package:front_gestao_ligas/data/database/repositories/time_repository.dart';
 import '../models/models.dart';
 
 /// Estado de times (RF 05)
@@ -24,7 +24,7 @@ class TimeProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _times = await _repo.listarPorCampeonato(campeonatoId);
+      _times = await _repo.buscarTimesPorCampeonato(campeonatoId);
       _isLoading = false;
       notifyListeners();
     } catch (e) {

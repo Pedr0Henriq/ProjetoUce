@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:front_gestao_ligas/data/database/repositories/usuario_repository.dart';
 import '../data/api_client.dart';
-import '../data/repositories.dart';
 import '../models/models.dart';
 
 /// Estado de autenticação (RF 01, RF 02, RF 11, RF 12)
 class AuthProvider extends ChangeNotifier {
-  final AuthRepository _repo;
+  final UsuarioRepository _repo;
   final ApiClient _apiClient;
 
   Usuario? _usuario;

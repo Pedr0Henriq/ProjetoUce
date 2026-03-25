@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../data/repositories.dart';
+import 'package:front_gestao_ligas/data/database/repositories/classificacao_repository.dart';
 import '../models/models.dart';
 
 /// Estado de classificação e estatísticas (RF 09, RF 10)
