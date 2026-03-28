@@ -10,19 +10,21 @@ class StatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isAndamento = status == StatusCampeonato.emAndamento;
+    final statusCamp = switch (status) {
+      StatusCampeonato.emAndamento => ['Em Andamento', AppTheme.statusEmAndamento],
+      StatusCampeonato.naoIniciado => ['Não Iniciado', AppTheme.statusAgendada],
+      StatusCampeonato.encerrado => ['Encerrado', AppTheme.statusEncerrado],
+    };
     return Chip(
       label: Text(
-        isAndamento ? 'Em andamento' : 'Encerrado',
+        statusCamp[0] as String,
         style: TextStyle(
-          color: isAndamento ? Colors.white : Colors.white,
+          color:Colors.white,
           fontSize: 12,
           fontWeight: FontWeight.w500,
         ),
       ),
-      backgroundColor: isAndamento
-          ? AppTheme.statusEmAndamento
-          : AppTheme.statusEncerrado,
+      backgroundColor: statusCamp[1] as Color,
       padding: const EdgeInsets.symmetric(horizontal: 4),
       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
     );

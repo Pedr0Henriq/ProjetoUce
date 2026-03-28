@@ -43,7 +43,7 @@ class AppDatabase extends _$AppDatabase {
 LazyDatabase _openConnection() {
   return LazyDatabase(() async {
     final dbFolder = await getApplicationDocumentsDirectory();
-    final file = File(p.join(dbFolder.path, 'torneio_db.sqlite'));
+    final file = File(p.join(dbFolder.path, 'torneio_db.db'));
 
     return NativeDatabase.createInBackground(file);
   });

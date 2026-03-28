@@ -22,9 +22,7 @@ class CampeonatoRepository {
           : TipoCampeonato.eliminatoria,
       numEquipes: data.numEquipes,
       dataInicio: data.dataInicio,
-      status: data.status == 'em_andamento' 
-          ? StatusCampeonato.emAndamento 
-          : StatusCampeonato.encerrado,
+      status: StatusCampeonato.to(data.status),
       criadoPor: data.criadoPor,
     );
   }
@@ -54,7 +52,7 @@ class CampeonatoRepository {
       tipo: Value(campeonato.tipo == domain.TipoCampeonato.pontoCorrido ? 'ponto_corrido' : 'eliminatoria'),
       numEquipes: Value(campeonato.numEquipes),
       dataInicio: Value(campeonato.dataInicio),
-      status: Value(campeonato.status == domain.StatusCampeonato.emAndamento ? 'em_andamento' : 'encerrado'),
+      status: Value(StatusCampeonato.of(campeonato.status)),
       criadoPor: Value(campeonato.criadoPor),
     );
   }

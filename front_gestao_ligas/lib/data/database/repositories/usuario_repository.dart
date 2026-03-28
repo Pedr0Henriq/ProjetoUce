@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:flutter/material.dart';
 import 'package:front_gestao_ligas/data/api_client.dart';
 import 'package:front_gestao_ligas/data/database/daos/usuario_dao.dart';
 import 'package:front_gestao_ligas/data/database/database.dart' as db;
@@ -30,8 +31,8 @@ class UsuarioRepository {
       email: Value(usuario.email),
       perfil: Value(
         usuario.perfil == domain.PerfilUsuario.administrador
-            ? 'administrador'
-            : 'analista',
+            ? 'ADMIN'
+            : 'VIEWER',
       ),
       criadoEm: Value(usuario.criadoEm),
     );
@@ -47,7 +48,7 @@ class UsuarioRepository {
 
     if (data.containsKey('usuario')) {
       final usuario = domain.Usuario.fromJson(data['usuario']);
-      await dao.atualizarUsuario(_domainToCompanion(usuario));
+      await dao.upsert(_domainToCompanion(usuario));
     }
 
     return data;

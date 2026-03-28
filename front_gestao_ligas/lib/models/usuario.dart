@@ -20,7 +20,7 @@ class Usuario {
       id: json['id'] as int,
       nome: json['nome'] as String,
       email: json['email'] as String,
-      perfil: json['perfil'] == 'administrador'
+      perfil: json['perfil'] == 'ADMIN'
           ? PerfilUsuario.administrador
           : PerfilUsuario.analista,
       criadoEm: DateTime.parse(json['criado_em'] as String),
@@ -33,8 +33,8 @@ class Usuario {
       'nome': nome,
       'email': email,
       'perfil': perfil == PerfilUsuario.administrador
-          ? 'administrador'
-          : 'analista',
+          ? 'ADMIN'
+          : 'VIEWER',
       'criado_em': criadoEm.toIso8601String(),
     };
   }

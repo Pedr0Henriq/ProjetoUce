@@ -52,7 +52,7 @@ class _CriarCampeonatoScreenState extends State<CriarCampeonatoScreen> {
           ? 'ponto_corrido'
           : 'eliminatoria',
       'num_equipes': int.parse(_numEquipesController.text.trim()),
-      'data_inicio': _dataInicio.toIso8601String(),
+      'data_inicio': _dataInicio.toIso8601String().split('T')[0],
     });
 
     if (mounted) {

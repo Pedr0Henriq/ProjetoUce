@@ -44,15 +44,16 @@ class AuthProvider extends ChangeNotifier {
 
     try {
       final response = await _repo.login(email, senha);
-      final token = response['token'] as String;
+      final token = response['access_token'] as String;
       await _apiClient.saveToken(token);
       _usuario = Usuario.fromJson(response['usuario'] as Map<String, dynamic>);
       _isAuthenticated = true;
       _isLoading = false;
       notifyListeners();
       return true;
-    } catch (e) {
+    } catch (e, stack) {
       _error = e.toString();
+      debugPrintStack(stackTrace: stack);
       _isLoading = false;
       notifyListeners();
       return false;

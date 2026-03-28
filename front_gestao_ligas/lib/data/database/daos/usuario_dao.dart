@@ -17,6 +17,15 @@ class UsuarioDao extends DatabaseAccessor<AppDatabase> with _$UsuarioDaoMixin {
       (select(usuarios)..where((tbl) => tbl.email.equals(email))).getSingleOrNull();
 
   Future<int> criarUsuario(UsuariosCompanion entity) => into(usuarios).insert(entity);
+  Future<int> upsert(UsuariosCompanion entity) {
+    return into(usuarios).insert(
+      entity,
+      onConflict: DoUpdate(
+        (old) => entity,
+        target: [usuarios.id]
+      )
+    );
+  }
   Future<bool> atualizarUsuario(UsuariosCompanion entity) => update(usuarios).replace(entity);
   Future<int> deletarUsuario(int id) => (delete(usuarios)..where((tbl) => tbl.id.equals(id))).go();
 }

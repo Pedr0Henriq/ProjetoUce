@@ -1,6 +1,27 @@
 enum TipoCampeonato { pontoCorrido, eliminatoria }
 
-enum StatusCampeonato { emAndamento, encerrado }
+enum StatusCampeonato {
+  naoIniciado('NAO_INICIADO', 'naoIniciado'),
+  emAndamento('EM_ANDAMENTO', 'emAndamento'),
+  encerrado('ENCERRADO', 'encerrado');
+
+  const StatusCampeonato(this.name, this.value);
+
+  final String name;
+  final String value;
+
+  static String of(String name) {
+    return StatusCampeonato.values
+        .firstWhere((value) => value.name == name)
+        .value;
+  }
+
+  static String to(String value) {
+    return StatusCampeonato.values
+        .firstWhere((status) => status.value == value)
+        .name;
+  }
+}
 
 class Campeonato {
   final int id;
@@ -9,7 +30,7 @@ class Campeonato {
   final TipoCampeonato tipo;
   final int numEquipes;
   final DateTime dataInicio;
-  final StatusCampeonato status;
+  final String status;
   final int criadoPor;
 
   const Campeonato({
@@ -33,9 +54,7 @@ class Campeonato {
           : TipoCampeonato.eliminatoria,
       numEquipes: json['num_equipes'] as int,
       dataInicio: DateTime.parse(json['data_inicio'] as String),
-      status: json['status'] == 'em_andamento'
-          ? StatusCampeonato.emAndamento
-          : StatusCampeonato.encerrado,
+      status: json['status'] as String,
       criadoPor: json['criado_por'] as int,
     );
   }
@@ -50,20 +69,13 @@ class Campeonato {
           : 'eliminatoria',
       'num_equipes': numEquipes,
       'data_inicio': dataInicio.toIso8601String(),
-      'status': status == StatusCampeonato.emAndamento
-          ? 'em_andamento'
-          : 'encerrado',
+      'status': status,
       'criado_por': criadoPor,
     };
   }
 
-  String get tipoFormatado => tipo == TipoCampeonato.pontoCorrido
-      ? 'Pontos Corridos'
-      : 'Eliminatória';
+  String get tipoFormatado =>
+      tipo == TipoCampeonato.pontoCorrido ? 'Pontos Corridos' : 'Eliminatória';
 
-  String get statusFormatado => status == StatusCampeonato.emAndamento
-      ? 'Em andamento'
-      : 'Encerrado';
-
-  bool get isEncerrado => status == StatusCampeonato.encerrado;
+  bool get isEncerrado => status == StatusCampeonato.encerrado.name;
 }

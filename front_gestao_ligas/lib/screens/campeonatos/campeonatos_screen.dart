@@ -59,7 +59,9 @@ class _CampeonatosScreenState extends State<CampeonatosScreen> {
                 );
                 if (confirm && context.mounted) {
                   await auth.logout();
-                  context.go('/login');
+                  if (context.mounted) {
+                    context.go('/login');
+                  }
                 }
               },
             ),
@@ -72,12 +74,14 @@ class _CampeonatosScreenState extends State<CampeonatosScreen> {
           Container(
             width: double.infinity,
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
+            color: Theme.of(
+              context,
+            ).colorScheme.primary.withValues(alpha: 0.05),
             child: Text(
               'Olá, ${auth.usuario?.nome ?? 'Usuário'}! 👋',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
             ),
           ),
 
@@ -106,9 +110,7 @@ class _CampeonatosScreenState extends State<CampeonatosScreen> {
           ),
 
           // Lista de campeonatos
-          Expanded(
-            child: _buildContent(campProvider),
-          ),
+          Expanded(child: _buildContent(campProvider)),
         ],
       ),
 
@@ -170,6 +172,17 @@ class _CampeonatoCard extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () => context.push('/campeonato/${campeonato.id}'),
+        onLongPress: () async {
+          final confirm = await DialogHelper.showConfirmation(
+                  context,
+                  title: 'Remover',
+                  message: 'Deseja apagar esse campeonato?',
+                  confirmText: 'Apagar',
+          );
+          if(confirm &&  context.mounted){
+            context.read<CampeonatoProvider>().excluir(campeonato.id);
+          }
+        },
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Row(
@@ -198,8 +211,8 @@ class _CampeonatoCard extends StatelessWidget {
                     Text(
                       campeonato.nome,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
+                        fontWeight: FontWeight.w600,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -207,22 +220,26 @@ class _CampeonatoCard extends StatelessWidget {
                     Text(
                       '${campeonato.tipoFormatado} • ${campeonato.numEquipes} equipes',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.grey.shade600,
-                          ),
+                        color: Colors.grey.shade600,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'Início: ${DateFormatters.data(campeonato.dataInicio)}',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.grey.shade500,
-                          ),
+                        color: Colors.grey.shade500,
+                      ),
                     ),
                   ],
                 ),
               ),
 
               // Status
-              StatusChip(status: campeonato.status),
+              StatusChip(
+                status: StatusCampeonato.values.firstWhere(
+                  (value) => value.name == campeonato.status,
+                ),
+              ),
 
               const SizedBox(width: 4),
               const Icon(Icons.chevron_right, color: Colors.grey),
