@@ -13,6 +13,11 @@ class BaseModel(db.Model):
         onupdate=lambda: datetime.now(timezone.utc)
     )
 
+campeonato_administradores = db.Table('campeonato_administradores',
+    db.Column('usuario_id', db.Integer, db.ForeignKey('usuarios.id'), primary_key=True),
+    db.Column('campeonato_id', db.Integer, db.ForeignKey('campeonatos.id'), primary_key=True)
+)
+
 class Usuario(BaseModel):
     __tablename__ = 'usuarios'
     
@@ -55,6 +60,7 @@ class Campeonato(BaseModel):
     # Relacionamentos (facilita muito na hora de buscar os dados encadeados)
     criador = db.relationship('Usuario', foreign_keys=[criado_por], backref='campeonatos_criados')
     times = db.relationship('Time', foreign_keys='Time.campeonato_id', backref='campeonato', lazy=True, cascade="all, delete-orphan")
+    administradores = db.relationship('Usuario', secondary=campeonato_administradores, lazy='subquery', backref=db.backref('campeonatos_gerenciados', lazy=True))
 
     def to_dict(self):
         return {
@@ -108,4 +114,80 @@ class Jogador(BaseModel):
             "numero": self.numero,
             "posicao": self.posicao,
             "time_id": self.time_id
+        }
+
+class Partida(BaseModel):
+    __tablename__ = 'partidas'
+
+    rodada = db.Column(db.Integer, nullable=False)
+    data = db.Column(db.Date, nullable=True) # Pode ser agendado sem data inicial
+    horario = db.Column(db.String(5), nullable=True) # HH:MM
+    local = db.Column(db.String(100), nullable=True)
+    status = db.Column(db.String(20), nullable=False, default='AGENDADA') # AGENDADA, EM_ANDAMENTO, FINALIZADA
+    placar_mandante = db.Column(db.Integer, nullable=True)
+    placar_visitante = db.Column(db.Integer, nullable=True)
+    
+    # Chaves Estrangeiras
+    campeonato_id = db.Column(db.Integer, db.ForeignKey('campeonatos.id'), nullable=False)
+    time_mandante_id = db.Column(db.Integer, db.ForeignKey('times.id'), nullable=True)
+    time_visitante_id = db.Column(db.Integer, db.ForeignKey('times.id'), nullable=True)
+    
+    # Relacionamentos
+    time_mandante = db.relationship('Time', foreign_keys=[time_mandante_id])
+    time_visitante = db.relationship('Time', foreign_keys=[time_visitante_id])
+    campeonato_rel = db.relationship('Campeonato', backref=db.backref('partidas', lazy=True, cascade="all, delete-orphan"))
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "campeonato_id": self.campeonato_id,
+            "rodada": self.rodada,
+            "time_mandante": {
+                "id": self.time_mandante.id,
+                "nome": self.time_mandante.nome,
+                "escudo_url": self.time_mandante.escudo_url
+            } if self.time_mandante else None,
+            "time_visitante": {
+                "id": self.time_visitante.id,
+                "nome": self.time_visitante.nome,
+                "escudo_url": self.time_visitante.escudo_url
+            } if self.time_visitante else None,
+            "data": self.data.isoformat() if self.data else None,
+            "horario": self.horario,
+            "local": self.local,
+            "status": self.status,
+            "placar_mandante": self.placar_mandante,
+            "placar_visitante": self.placar_visitante
+        }
+
+class EventoPartida(BaseModel):
+    __tablename__ = 'eventos_partida'
+    
+    tipo = db.Column(db.String(50), nullable=False) # GOL, ASSISTENCIA, CARTAO_AMARELO, CARTAO_VERMELHO
+    minuto = db.Column(db.Integer, nullable=False)
+    
+    # Chaves Estrangeiras
+    partida_id = db.Column(db.Integer, db.ForeignKey('partidas.id'), nullable=False)
+    jogador_id = db.Column(db.Integer, db.ForeignKey('jogadores.id'), nullable=False)
+    time_id = db.Column(db.Integer, db.ForeignKey('times.id'), nullable=False)
+
+    # Relacionamentos
+    jogador = db.relationship('Jogador', backref=db.backref('eventos', lazy=True, cascade="all, delete-orphan"))
+    time = db.relationship('Time', foreign_keys=[time_id])
+    partida = db.relationship('Partida', backref=db.backref('eventos', lazy=True, cascade="all, delete-orphan"))
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "tipo": self.tipo,
+            "minuto": self.minuto,
+            "partida_id": self.partida_id,
+            "jogador": {
+                "id": self.jogador.id,
+                "nome": self.jogador.nome
+            } if self.jogador else None,
+            "time": {
+                "id": self.time.id,
+                "nome": self.time.nome
+            } if self.time else None
         }
