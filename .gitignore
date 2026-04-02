@@ -1,0 +1,39 @@
+# Backend (Python / Flask)
+back_gestao_ligas/venv/
+back_gestao_ligas/env/
+back_gestao_ligas/__pycache__/
+back_gestao_ligas/**/*.pyc
+back_gestao_ligas/**/*.pyo
+back_gestao_ligas/**/*.pyd
+back_gestao_ligas/.Python
+back_gestao_ligas/pip-log.txt
+
+# Banco de dados local (Backend)
+back_gestao_ligas/instance/
+back_gestao_ligas/*.db
+back_gestao_ligas/*.sqlite3
+
+# Arquivos de log do servidor
+back_gestao_ligas/*.log
+back_gestao_ligas/app_run.log
+
+# Variáveis de ambiente secretas
+back_gestao_ligas/.env
+back_gestao_ligas/.env.local
+
+# Frontend (Node / React / Vue)
+front_gestao_ligas/node_modules/
+front_gestao_ligas/dist/
+front_gestao_ligas/build/
+front_gestao_ligas/.env
+front_gestao_ligas/.env.*.local
+front_gestao_ligas/npm-debug.log*
+front_gestao_ligas/yarn-debug.log*
+front_gestao_ligas/yarn-error.log*
+
+# IDEs e OS (Geral)
+.DS_Store
+.idea/
+.vscode/
+__MACOSX/
+*.swp
