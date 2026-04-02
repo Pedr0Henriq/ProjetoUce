@@ -8,35 +8,35 @@ from app import db
 
 campeonatos_bp = Blueprint('campeonatos', __name__)
 
-# --- Função Auxiliar ---
+# Função Auxiliar
 def is_admin(usuario_id):
     """Verifica se o usuário logado tem perfil de ADMIN."""
     usuario = Usuario.query.get(usuario_id)
     return usuario and usuario.perfil == 'ADMIN'
 
-# --- Rotas ---
+# Rotas
 
 @campeonatos_bp.route('', methods=['GET'])
 @jwt_required()
 def listar_campeonatos():
     """RF03, RF14, RF15 - Lista campeonatos com filtros opcionais."""
-    # Permissão: autenticado (ADMIN ou VIEWER) - O @jwt_required() já garante isso[cite: 116].
+    # Permissão: autenticado (ADMIN ou VIEWER) - O @jwt_required() já garante isso
     
-    # Captura os query params (ex: /campeonatos?status=ativo&busca=liga) [cite: 117-119]
+    # Captura os query params (ex: /campeonatos?status=ativo&busca=liga)
     status_param = request.args.get('status')
     busca_param = request.args.get('busca')
     
     query = Campeonato.query
 
     if status_param:
-        # Se vier 'ativo', buscamos 'EM_ANDAMENTO' ou 'NAO_INICIADO', senao buscamos o exato (ex: 'ENCERRADO') [cite: 118]
+        # Se vier 'ativo', buscamos 'EM_ANDAMENTO' ou 'NAO_INICIADO', senao buscamos o exato (ex: 'ENCERRADO')
         if status_param.lower() == 'ativo':
             query = query.filter(Campeonato.status != 'ENCERRADO')
         else:
             query = query.filter(Campeonato.status == status_param.upper())
             
     if busca_param:
-        # Busca parcial ignorando maiúsculas/minúsculas (ilike no SQLite/Postgres) [cite: 119]
+        # Busca parcial ignorando maiúsculas/minúsculas (ilike no SQLite/Postgres)
         query = query.filter(Campeonato.nome.ilike(f'%{busca_param}%'))
 
     campeonatos = query.all()
@@ -49,7 +49,7 @@ def criar_campeonato():
     """RF03 - Cria um novo campeonato."""
     usuario_id = get_jwt_identity()
     
-    # Permissão: ADMIN[cite: 135].
+    # Permissão: ADMIN
     if not is_admin(usuario_id):
         return jsonify({"erro": "Acesso negado. Apenas administradores podem criar campeonatos."}), 403
 
@@ -61,7 +61,7 @@ def criar_campeonato():
         return jsonify({"erro": "Dados incompletos"}), 400
 
     try:
-        # Converte a string 'YYYY-MM-DD' para um objeto Date do Python [cite: 143]
+        # Converte a string 'YYYY-MM-DD' para um objeto Date do Python
         data_inicio_obj = datetime.strptime(dados['data_inicio'], '%Y-%m-%d').date()
     except ValueError:
         return jsonify({"erro": "Formato de data inválido. Use YYYY-MM-DD"}), 400
@@ -72,9 +72,15 @@ def criar_campeonato():
         tipo=dados['tipo'],
         num_equipes=dados['num_equipes'],
         data_inicio=data_inicio_obj,
-        status='NAO_INICIADO', # Status padrão [cite: 155]
-        criado_por=usuario_id  # Pega o ID de quem está logado [cite: 156]
+        status='NAO_INICIADO', # Status padrão
+        criado_por=usuario_id  # Pega o ID de quem está logado
     )
+
+    # Injeta automaticamente o criador como o primeiro administrador
+    from app.models import Usuario
+    usuario_criador = Usuario.query.get(usuario_id)
+    if usuario_criador:
+        novo_campeonato.administradores.append(usuario_criador)
 
     db.session.add(novo_campeonato)
     db.session.commit()
@@ -86,7 +92,7 @@ def criar_campeonato():
 @jwt_required()
 def obter_campeonato(id):
     """Retorna os detalhes de um campeonato específico."""
-    # Permissão: autenticado[cite: 162].
+    # Permissão: autenticado
     campeonato = Campeonato.query.get_or_404(id)
     return jsonify(campeonato.to_dict()), 200
 
@@ -95,16 +101,16 @@ def obter_campeonato(id):
 @jwt_required()
 def atualizar_campeonato(id):
     """Atualiza dados permitidos de um campeonato."""
+    campeonato = Campeonato.query.get_or_404(id)
     usuario_id = get_jwt_identity()
     
-    # Permissão: ADMIN[cite: 173].
-    if not is_admin(usuario_id):
+    # Permissão: ADMIN daquele campeonato específico
+    from app.routes.administradores import is_campeonato_admin
+    if not is_campeonato_admin(usuario_id, campeonato):
         return jsonify({"erro": "Acesso negado."}), 403
-
-    campeonato = Campeonato.query.get_or_404(id)
     dados = request.get_json()
 
-    # Atualiza apenas os campos permitidos pelo body (nome e data_inicio) [cite: 174-176]
+    # Atualiza apenas os campos permitidos pelo body (nome e data_inicio)
     if 'nome' in dados:
         campeonato.nome = dados['nome']
     if 'data_inicio' in dados:
@@ -114,50 +120,50 @@ def atualizar_campeonato(id):
             return jsonify({"erro": "Formato de data inválido. Use YYYY-MM-DD"}), 400
 
     db.session.commit()
-    return jsonify(campeonato.to_dict()), 200 # Retorna objeto atualizado [cite: 178]
+    return jsonify(campeonato.to_dict()), 200 # Retorna objeto atualizado
 
 
 @campeonatos_bp.route('/<int:id>', methods=['DELETE'])
 @jwt_required()
 def deletar_campeonato(id):
     """Exclui um campeonato, desde que não esteja encerrado."""
+    campeonato = Campeonato.query.get_or_404(id)
     usuario_id = get_jwt_identity()
-    
-    # Permissão: ADMIN[cite: 180].
-    if not is_admin(usuario_id):
+
+    # Permissão: ADMIN daquele campeonato específico
+    from app.routes.administradores import is_campeonato_admin
+    if not is_campeonato_admin(usuario_id, campeonato):
         return jsonify({"erro": "Acesso negado."}), 403
 
-    campeonato = Campeonato.query.get_or_404(id)
-
-    # Regra: não pode excluir se status = ENCERRADO[cite: 181].
+    # Regra: não pode excluir se status = ENCERRADO.
     if campeonato.status == 'ENCERRADO':
         return jsonify({"erro": "Não é possível excluir um campeonato já encerrado."}), 400
 
     db.session.delete(campeonato)
     db.session.commit()
 
-    return '', 204 # Retorna 204 sem corpo [cite: 182]
+    return '', 204 # Retorna 204 sem corpo
 
 
 @campeonatos_bp.route('/<int:id>/encerrar', methods=['POST'])
 @jwt_required()
 def encerrar_campeonato(id):
     """RF14 - Encerra o campeonato e define o time campeão."""
-    usuario_id = get_jwt_identity()
-    
-    # Permissão: ADMIN[cite: 186].
-    if not is_admin(usuario_id):
-        return jsonify({"erro": "Acesso negado."}), 403
-
     campeonato = Campeonato.query.get_or_404(id)
+    usuario_id = get_jwt_identity()
+
+    # Permissão: ADMIN daquele campeonato específico
+    from app.routes.administradores import is_campeonato_admin
+    if not is_campeonato_admin(usuario_id, campeonato):
+        return jsonify({"erro": "Acesso negado."}), 403
     dados = request.get_json()
 
     if not dados or 'campeao_time_id' not in dados:
         return jsonify({"erro": "O ID do time campeão é obrigatório."}), 400
 
-    campeonato.status = 'ENCERRADO' [site: 195]
-    campeonato.campeao_time_id = dados['campeao_time_id'] [site: 196]
+    campeonato.status = 'ENCERRADO'
+    campeonato.campeao_time_id = dados['campeao_time_id']
     
     db.session.commit()
 
-    return jsonify(campeonato.to_dict()), 200 [site: 190]
+    return jsonify(campeonato.to_dict()), 200
