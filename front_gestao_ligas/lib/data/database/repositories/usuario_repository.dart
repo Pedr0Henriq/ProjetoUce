@@ -1,5 +1,4 @@
 import 'package:drift/drift.dart';
-import 'package:flutter/material.dart';
 import 'package:front_gestao_ligas/data/api_client.dart';
 import 'package:front_gestao_ligas/data/database/daos/usuario_dao.dart';
 import 'package:front_gestao_ligas/data/database/database.dart' as db;

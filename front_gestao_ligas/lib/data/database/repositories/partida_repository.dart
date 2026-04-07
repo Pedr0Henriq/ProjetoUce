@@ -115,7 +115,7 @@ class PartidaRepository {
   Future<void> gerarCalendario(int campeonatoId) async {
     try {
     final campeonato = await campeonatoRepository.buscarPorId(campeonatoId);
-    debugPrint('${TipoCampeonato.of(campeonato.tipo.label).toUpperCase()}');
+    debugPrint(TipoCampeonato.of(campeonato.tipo.label).toUpperCase());
     final response = await api.post('/campeonatos/$campeonatoId/gerar-calendario', {
       'tipo_geracao': TipoCampeonato.of(campeonato.tipo.label).toUpperCase(),
       'data_primeira_rodada': campeonato.dataInicio.toIso8601String().split('T')[0]
