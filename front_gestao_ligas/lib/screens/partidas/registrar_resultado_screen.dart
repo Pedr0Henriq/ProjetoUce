@@ -39,6 +39,7 @@ class _RegistrarResultadoScreenState extends State<RegistrarResultadoScreen> {
     int? timeIdSelecionado;
     int? minuto;
     final minutoController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
 
     showModalBottomSheet(
       context: context,
@@ -50,117 +51,131 @@ class _RegistrarResultadoScreenState extends State<RegistrarResultadoScreen> {
         builder: (ctx, setModalState) => Padding(
           padding: EdgeInsets.fromLTRB(
               16, 24, 16, MediaQuery.of(ctx).viewInsets.bottom + 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text('Adicionar Evento',
-                  style: Theme.of(ctx).textTheme.titleLarge),
-              const SizedBox(height: 16),
+          child: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text('Adicionar Evento',
+                    style: Theme.of(ctx).textTheme.titleLarge),
+                const SizedBox(height: 16),
 
-              // Tipo de evento
-              DropdownButtonFormField<String>(
-                decoration: const InputDecoration(labelText: 'Tipo de Evento'),
-                items: const [
-                  DropdownMenuItem(value: 'gol', child: Text('⚽ Gol')),
-                  DropdownMenuItem(
-                      value: 'assistencia', child: Text('👟 Assistência')),
-                  DropdownMenuItem(
-                      value: 'cartao_amarelo',
-                      child: Text('🟨 Cartão Amarelo')),
-                  DropdownMenuItem(
-                      value: 'cartao_vermelho',
-                      child: Text('🟥 Cartão Vermelho')),
-                ],
-                onChanged: (v) => setModalState(() => tipoSelecionado = v),
-              ),
-              const SizedBox(height: 12),
-
-              // Time
-              DropdownButtonFormField<int>(
-                decoration: const InputDecoration(labelText: 'Time'),
-                items: [
-                  DropdownMenuItem(
-                    value: partida.timeMandanteId,
-                    child: Text(partida.nomeMandante ?? 'Mandante'),
-                  ),
-                  DropdownMenuItem(
-                    value: partida.timeVisitanteId,
-                    child: Text(partida.nomeVisitante ?? 'Visitante'),
-                  ),
-                ],
-                onChanged: (v) {
-                  setModalState(() => timeIdSelecionado = v);
-                  // Carregar jogadores do time selecionado
-                  if (v != null) {
-                    context.read<JogadorProvider>().listarPorTime(v);
-                  }
-                },
-              ),
-              const SizedBox(height: 12),
-
-              // Jogador (carregado dinamicamente)
-              Consumer<JogadorProvider>(
-                builder: (ctx, jogProv, _) {
-                  if (jogProv.isLoading) {
-                    return const LinearProgressIndicator();
-                  }
-                  return DropdownButtonFormField<int>(
-                    decoration:
-                        const InputDecoration(labelText: 'Jogador'),
-                    items: jogProv.jogadores
-                        .map((j) => DropdownMenuItem(
-                              value: j.id,
-                              child: Text(
-                                  '${j.numero != null ? "#${j.numero} " : ""}${j.nome}'),
-                            ))
-                        .toList(),
-                    onChanged: (v) =>
-                        setModalState(() => jogadorIdSelecionado = v),
-                  );
-                },
-              ),
-              const SizedBox(height: 12),
-
-              // Minuto
-              TextFormField(
-                controller: minutoController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Minuto (opcional)',
-                  hintText: 'Ex: 45',
+                // Tipo de evento
+                DropdownButtonFormField<String>(
+                  decoration: const InputDecoration(labelText: 'Tipo de Evento'),
+                  items: const [
+                    DropdownMenuItem(value: 'gol', child: Text('⚽ Gol')),
+                    DropdownMenuItem(
+                        value: 'assistencia', child: Text('👟 Assistência')),
+                    DropdownMenuItem(
+                        value: 'cartao_amarelo',
+                        child: Text('🟨 Cartão Amarelo')),
+                    DropdownMenuItem(
+                        value: 'cartao_vermelho',
+                        child: Text('🟥 Cartão Vermelho')),
+                  ],
+                  onChanged: (v) => setModalState(() => tipoSelecionado = v),
                 ),
-                onChanged: (v) => minuto = int.tryParse(v),
-              ),
-              const SizedBox(height: 20),
+                const SizedBox(height: 12),
 
-              ElevatedButton(
-                onPressed: (tipoSelecionado != null &&
-                        jogadorIdSelecionado != null &&
-                        timeIdSelecionado != null)
-                    ? () {
-                        setState(() {
-                          _eventos.add({
-                            'tipo': tipoSelecionado,
-                            'jogador_id': jogadorIdSelecionado,
-                            'time_id': timeIdSelecionado,
-                            'minuto': minuto,
-                            // Dados para exibição local
-                            '_display_jogador': context
-                                .read<JogadorProvider>()
-                                .jogadores
-                                .firstWhere(
-                                    (j) => j.id == jogadorIdSelecionado)
-                                .nome,
-                            '_display_tipo': tipoSelecionado,
+                // Time
+                DropdownButtonFormField<int>(
+                  decoration: const InputDecoration(labelText: 'Time'),
+                  items: [
+                    DropdownMenuItem(
+                      value: partida.timeMandanteId,
+                      child: Text(partida.nomeMandante ?? 'Mandante'),
+                    ),
+                    DropdownMenuItem(
+                      value: partida.timeVisitanteId,
+                      child: Text(partida.nomeVisitante ?? 'Visitante'),
+                    ),
+                  ],
+                  onChanged: (v) {
+                    setModalState(() => timeIdSelecionado = v);
+                    if (v != null) {
+                      context.read<JogadorProvider>().listarPorTime(v);
+                    }
+                  },
+                ),
+                const SizedBox(height: 12),
+
+                // Jogador (carregado dinamicamente)
+                Consumer<JogadorProvider>(
+                  builder: (ctx, jogProv, _) {
+                    if (jogProv.isLoading) {
+                      return const LinearProgressIndicator();
+                    }
+                    return DropdownButtonFormField<int>(
+                      decoration:
+                          const InputDecoration(labelText: 'Jogador'),
+                      items: jogProv.jogadores
+                          .map((j) => DropdownMenuItem(
+                                value: j.id,
+                                child: Text(
+                                    '${j.numero != null ? "#${j.numero} " : ""}${j.nome}'),
+                              ))
+                          .toList(),
+                      onChanged: (v) =>
+                          setModalState(() => jogadorIdSelecionado = v),
+                    );
+                  },
+                ),
+                const SizedBox(height: 12),
+
+                // Minuto — opcional, mas se informado deve ser 0-120
+                TextFormField(
+                  controller: minutoController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Minuto (opcional)',
+                    hintText: 'Ex: 45',
+                  ),
+                  onChanged: (v) => minuto = int.tryParse(v),
+                  validator: (v) {
+                    if (v == null || v.isEmpty) return null; // campo opcional
+                    final n = int.tryParse(v);
+                    if (n == null || n < 0 || n > 120) {
+                      return 'Informe um minuto entre 0 e 120';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 20),
+
+                ElevatedButton(
+                  onPressed: (tipoSelecionado != null &&
+                          jogadorIdSelecionado != null &&
+                          timeIdSelecionado != null)
+                      ? () {
+                          if (!formKey.currentState!.validate()) return;
+                          setState(() {
+                            _eventos.add({
+                              'tipo': tipoSelecionado,
+                              'jogador_id': jogadorIdSelecionado,
+                              'time_id': timeIdSelecionado,
+                              'minuto': minuto,
+                              '_display_jogador': context
+                                  .read<JogadorProvider>()
+                                  .jogadores
+                                  .firstWhere(
+                                      (j) => j.id == jogadorIdSelecionado)
+                                  .nome,
+                              '_display_tipo': tipoSelecionado,
+                            });
+                            // Manter eventos ordenados por minuto para exibição
+                            _eventos.sort((a, b) =>
+                                ((a['minuto'] as int?) ?? 0)
+                                    .compareTo((b['minuto'] as int?) ?? 0));
                           });
-                        });
-                        Navigator.pop(ctx);
-                      }
-                    : null,
-                child: const Text('Adicionar'),
-              ),
-            ],
+                          Navigator.pop(ctx);
+                        }
+                      : null,
+                  child: const Text('Adicionar'),
+                ),
+              ],
+            ),
           ),
         ),
       ),

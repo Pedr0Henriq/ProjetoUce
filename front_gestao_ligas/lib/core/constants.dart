@@ -9,7 +9,7 @@ class AppConstants {
   // Exemplo: --dart-define=API_HOST=192.168.1.50 --dart-define=API_PORT=5005
   static const String _hostIP = String.fromEnvironment(
     'API_HOST',
-    defaultValue: '192.168.1.8',
+    defaultValue: '192.168.1.6',
   );
   static const String _port = String.fromEnvironment(
     'API_PORT',

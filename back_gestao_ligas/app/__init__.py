@@ -1,5 +1,5 @@
 import os
-from flask import Flask
+from flask import Flask, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import JWTManager
 from dotenv import load_dotenv
@@ -39,6 +39,19 @@ def create_app():
     app.register_blueprint(estatisticas_bp, url_prefix='/v1')
     app.register_blueprint(busca_bp, url_prefix='/v1')
     app.register_blueprint(administradores_bp, url_prefix='/v1')
+
+    # ── Health check ─────────────────────────────────────────────────────────
+    @app.route('/v1/health')
+    def health():
+        """Verifica se a API está no ar.
+
+        Usado pelo app móvel na inicialização para confirmar conectividade antes
+        de tentar autenticar, evitando mensagens de erro genéricas ao usuário.
+
+        Returns:
+            200: ``{"status": "ok", "versao": "1.1.0"}``
+        """
+        return jsonify({"status": "ok", "versao": "1.1.0"}), 200
 
     with app.app_context():
         db.create_all()

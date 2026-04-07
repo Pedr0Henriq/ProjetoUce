@@ -1,8 +1,12 @@
+import re
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity, decode_token
 from datetime import timedelta
 from app.models import Usuario
 from app import db
+
+# Padrão simples para validação de formato de e-mail
+_EMAIL_RE = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
 
 # Criamos o Blueprint para as rotas de autenticação
 auth_bp = Blueprint('auth', __name__)
@@ -14,6 +18,9 @@ def register():
     # Validação básica para não quebrar o banco se faltarem dados essenciais
     if not dados or not dados.get('nome') or not dados.get('email') or not dados.get('senha'):
         return jsonify({"erro": "Nome, e-mail e senha são obrigatórios"}), 400
+
+    if not _EMAIL_RE.match(dados['email']):
+        return jsonify({"erro": "Formato de e-mail inválido."}), 400
 
     # Verifica se o e-mail já existe no banco
     if Usuario.query.filter_by(email=dados.get('email')).first():
@@ -178,6 +185,8 @@ def update_me():
         
     # Atualiza email se vier e for diferente, e se não tiver duplicado
     if 'email' in dados and dados['email'] != usuario.email:
+        if not _EMAIL_RE.match(dados['email']):
+            return jsonify({"erro": "Formato de e-mail inválido."}), 400
         existente = Usuario.query.filter_by(email=dados['email']).first()
         if existente:
             return jsonify({"erro": "Este e-mail já está em uso por outra conta."}), 409
@@ -191,6 +200,42 @@ def update_me():
         if not usuario.verificar_senha(senha_atual):
             return jsonify({"erro": "A senha atual está incorreta."}), 400
         usuario.set_senha(nova_senha)
-        
+
     db.session.commit()
     return jsonify(usuario.to_dict()), 200
+
+
+# ── Aliases de compatibilidade com o app móvel Flutter ────────────────────────
+# O frontend chama /perfil e /recuperar-senha; mantemos /me e /forgot-password
+# como rotas canônicas e criamos aliases para não depender de uma nova build.
+
+@auth_bp.route('/perfil', methods=['GET'])
+@jwt_required()
+def get_perfil():
+    """Alias de GET /me para compatibilidade com o app móvel."""
+    return me()
+
+
+@auth_bp.route('/perfil', methods=['PUT'])
+@jwt_required()
+def update_perfil():
+    """Alias de PUT /me para compatibilidade com o app móvel."""
+    return update_me()
+
+
+@auth_bp.route('/recuperar-senha', methods=['POST'])
+def recuperar_senha():
+    """Alias de POST /forgot-password para compatibilidade com o app móvel."""
+    return forgot_password()
+
+
+@auth_bp.route('/logout', methods=['POST'])
+@jwt_required()
+def logout():
+    """Encerra a sessão do usuário.
+
+    JWT é stateless: a invalidação real ocorre no cliente descartando o token.
+    Este endpoint existe para que o app possa registrar a intenção de logout e
+    receber uma confirmação explícita (útil para analytics e auditoria futura).
+    """
+    return jsonify({"mensagem": "Sessão encerrada com sucesso."}), 200

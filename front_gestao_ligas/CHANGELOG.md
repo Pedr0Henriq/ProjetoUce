@@ -8,7 +8,12 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ## [Unreleased]
 
+---
+
+## [1.1.0] — 2026-04-07
+
 ### Adicionado
+
 - **RF 12 — Tela de Perfil do Usuário** (`/perfil`): permite editar nome, e-mail e senha
   diretamente no aplicativo. Acessível pelo botão de perfil na AppBar da tela principal.
 - **RF 13 — Histórico de Partidas**: seção "Histórico de Partidas" na ficha do time,
@@ -27,8 +32,27 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 - Métodos RF 17 em `UsuarioRepository` e `AuthProvider`:
   `listarAdministradoresCampeonato`, `adicionarAdministrador`, `removerAdministrador`.
 - Rota `/splash` (pública), `/perfil` e `/campeonato/:id/administradores` no GoRouter.
+- **`_StatusPartidaChip`** em `PartidasTab`: chip visual compacto (ícone + label)
+  indicando "Agendada" (laranja) ou "Finalizada" (verde) em cada card de partida.
+- **Validação de minuto** no diálogo de registro de evento: campo aceita apenas 0–120;
+  valores inválidos exibem mensagem de erro inline sem fechar o modal.
+- **Ordenação automática de eventos por minuto** ao adicionar na tela de registro de
+  resultado; a linha do tempo fica sempre em ordem cronológica.
+
+### Corrigido
+
+- **Bug RF 10 — Aba Artilharia**: `ClassificacaoProvider.buscarAssistencias()` chamava
+  o mesmo endpoint que `buscarArtilharia()`, fazendo ambas as abas exibirem artilheiros.
+  Substituído por `carregarArtilhariaEAssistencias()`, que faz uma única chamada e ordena
+  a mesma lista de forma diferente para cada aba (gols desc / assistências desc).
+- **Bug RF 10 — Campos de exibição**: `ArtilhariaTab` acessava `item['nome_jogador']` e
+  `item['nome_time']`, que não existiam na resposta da API. Corrigido para
+  `item['jogador']['nome']` e `item['jogador']['time']['nome']`.
+- **Aba Artilharia agora filtra zeros**: jogadores sem gols não aparecem na aba de
+  artilheiros; jogadores sem assistências não aparecem na aba de assistências.
 
 ### Modificado
+
 - **Login Screen**: substituído o bloco de logo inline pelo widget `AppLogo` (consistência
   visual com o splash); adicionado gradiente sutil no fundo (verde 7% → branco).
 - **`CampeonatosScreen`**: empty state agora exibe botão "Criar Campeonato" para admins
@@ -40,12 +64,15 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   e `_ResultadoChip`.
 - **`UsuarioRepository`**: documentação `/// RF 17` nos três novos métodos.
 - **`AuthProvider`**: documentação `/// RF 17` nos três novos métodos delegadores.
+- **`PartidasTab`**: indicador de "Finalizada" simplificado; texto "Toque para ver a
+  súmula" reposicionado abaixo do confronto.
 
 ---
 
 ## [1.0.0] — 2026-04-07
 
-### Adicionado
+### Adicionado (v1.0.0)
+
 - **RF 01 — Autenticar Usuário**: login por e-mail e senha com recuperação de senha.
 - **RF 02 — Controlar Permissões por Perfil**: restrição de funcionalidades por
   Administrador / Analista via `auth.isAdmin` em todos os botões de ação.

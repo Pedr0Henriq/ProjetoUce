@@ -7,8 +7,13 @@ class ClassificacaoProvider extends ChangeNotifier {
   final ClassificacaoRepository _repo;
 
   List<Classificacao> _classificacao = [];
+
+  /// Lista de artilheiros ordenada por gols (decrescente).
   List<Map<String, dynamic>> _artilheiros = [];
+
+  /// Lista de assistentes ordenada por assistências (decrescente).
   List<Map<String, dynamic>> _assistencias = [];
+
   bool _isLoading = false;
   String? _error;
 
@@ -36,13 +41,29 @@ class ClassificacaoProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> buscarArtilharia(int campeonatoId) async {
+  /// RF 10 — Carrega artilheiros e assistentes a partir de uma única chamada à
+  /// API, ordenando cada lista de forma independente:
+  /// - artilheiros: por gols (desc)
+  /// - assistências: por assistências (desc)
+  ///
+  /// Isso evita duas chamadas desnecessárias e garante que cada aba exiba os
+  /// dados classificados pelo critério correto.
+  Future<void> carregarArtilhariaEAssistencias(int campeonatoId) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      _artilheiros = await _repo.artilhariaEAssistencia(campeonatoId);
+      final dados = await _repo.artilhariaEAssistencia(campeonatoId);
+
+      _artilheiros = List<Map<String, dynamic>>.from(dados)
+        ..sort((a, b) => ((b['gols'] as num?) ?? 0)
+            .compareTo((a['gols'] as num?) ?? 0));
+
+      _assistencias = List<Map<String, dynamic>>.from(dados)
+        ..sort((a, b) => ((b['assistencias'] as num?) ?? 0)
+            .compareTo((a['assistencias'] as num?) ?? 0));
+
       _isLoading = false;
       notifyListeners();
     } catch (e) {
@@ -52,35 +73,28 @@ class ClassificacaoProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> buscarAssistencias(int campeonatoId) async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
-    try {
-      _assistencias = await _repo.artilhariaEAssistencia(campeonatoId);
-      _isLoading = false;
-      notifyListeners();
-    } catch (e) {
-      _error = e.toString();
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-
-  /// Carregar tudo de uma vez
+  /// Carregar classificação + artilharia de uma só vez (usado pelo painel).
   Future<void> carregarTudo(int campeonatoId) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      final results = await Future.wait([
-        _repo.buscarPorCampeonato(campeonatoId),
-        _repo.artilhariaEAssistencia(campeonatoId),
-      ]);
+      final classificacaoFut = _repo.buscarPorCampeonato(campeonatoId);
+      final artilhariaFut = _repo.artilhariaEAssistencia(campeonatoId);
+
+      final results = await Future.wait([classificacaoFut, artilhariaFut]);
+
       _classificacao = results[0] as List<Classificacao>;
-      _artilheiros = results[1] as List<Map<String, dynamic>>;
+
+      final dados = results[1] as List<Map<String, dynamic>>;
+      _artilheiros = List<Map<String, dynamic>>.from(dados)
+        ..sort((a, b) => ((b['gols'] as num?) ?? 0)
+            .compareTo((a['gols'] as num?) ?? 0));
+      _assistencias = List<Map<String, dynamic>>.from(dados)
+        ..sort((a, b) => ((b['assistencias'] as num?) ?? 0)
+            .compareTo((a['assistencias'] as num?) ?? 0));
+
       _isLoading = false;
       notifyListeners();
     } catch (e) {
