@@ -111,4 +111,40 @@ class UsuarioRepository {
     );
     await dao.criarUsuario(companion);
   }
+
+  // ── RF 17 — Administradores Adicionais ────────────────────────────────────
+
+  /// RF 17 — Retorna todos os co-administradores de um campeonato.
+  ///
+  /// Endpoint: GET /campeonatos/:id/administradores
+  Future<List<domain.Usuario>> listarAdministradoresCampeonato(
+      int campeonatoId) async {
+    final response = await api.get('/campeonatos/$campeonatoId/administradores');
+    final list = response as List;
+    return list
+        .map((e) => domain.Usuario.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// RF 17 — Adiciona um usuário como co-administrador de um campeonato.
+  ///
+  /// Endpoint: POST /campeonatos/:id/administradores
+  /// Body: `{ "email": "..." }`
+  Future<void> adicionarAdministrador(
+      int campeonatoId, String email) async {
+    await api.post(
+      '/campeonatos/$campeonatoId/administradores',
+      {'email': email},
+    );
+  }
+
+  /// RF 17 — Remove um co-administrador de um campeonato.
+  ///
+  /// Endpoint: DELETE /campeonatos/:id/administradores/:usuarioId
+  Future<void> removerAdministrador(
+      int campeonatoId, int usuarioId) async {
+    await api.delete(
+      '/campeonatos/$campeonatoId/administradores/$usuarioId',
+    );
+  }
 }

@@ -4,16 +4,24 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 class AppConstants {
   AppConstants._();
 
-  // API — detecta plataforma automaticamente
-  // Para dispositivo físico Android, usar o IP da máquina na rede local
-  static const String _hostIP = '192.168.1.5'; // IP da máquina na rede (Ethernet/Wi-Fi)
+  // API
+  // Valores podem ser sobrescritos em runtime via --dart-define.
+  // Exemplo: --dart-define=API_HOST=192.168.1.50 --dart-define=API_PORT=5005
+  static const String _hostIP = String.fromEnvironment(
+    'API_HOST',
+    defaultValue: '192.168.1.8',
+  );
+  static const String _port = String.fromEnvironment(
+    'API_PORT',
+    defaultValue: '5005',
+  );
 
   static String get apiBaseUrl {
     if (kIsWeb) {
-      return 'http://localhost:5000/v1'; // Flutter Web
+      return 'http://localhost:$_port/v1'; // Flutter Web
     }
-    // Android (físico ou emulator) e demais plataformas → IP da rede local
-    return 'http://$_hostIP:5000/v1';
+    // Android (físico ou emulador) e demais plataformas
+    return 'http://$_hostIP:$_port/v1';
   }
 
   static const Duration apiTimeout = Duration(seconds: 15);

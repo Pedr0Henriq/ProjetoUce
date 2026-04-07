@@ -1,15 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import '../../../core/theme.dart';
+import '../../../core/utils/date_formatters.dart';
 import '../../../core/utils/dialog_helper.dart';
 import '../../../state/auth_provider.dart';
 import '../../../state/time_provider.dart';
 import '../../../state/jogador_provider.dart';
+import '../../../state/partida_provider.dart';
 import '../../../models/jogador.dart';
+import '../../../models/partida.dart';
 import '../../widgets/state_widgets.dart';
 import '../../widgets/team_shield.dart';
 
-/// Tela de Ficha do Time (Seção 4.5 - RF 05, RF 06, RF 13)
+/// Tela de Ficha do Time (Seção 4.5 - RF 05, RF 06, RF 13).
+///
+/// Exibe: escudo e dados do time, elenco de jogadores e histórico de partidas.
+/// O histórico (RF 13) é filtrado a partir das partidas já carregadas no
+/// [PartidaProvider] pelo [CampeonatoPainelScreen] pai.
 class TimeFichaScreen extends StatefulWidget {
   final int timeId;
   final int campeonatoId;
@@ -178,9 +186,213 @@ class _TimeFichaScreenState extends State<TimeFichaScreen> {
                               jogador: jogador,
                               isAdmin: isAdmin,
                             )),
+
+                      // ── Histórico de Partidas (RF 13) ─────────────────
+                      const SizedBox(height: 24),
+                      const Divider(),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Histórico de Partidas',
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      ..._buildHistoricoPartidas(context),
                     ],
                   ),
                 ),
+    );
+  }
+
+  /// RF 13 — Constrói a lista de partidas finalizadas do time.
+  ///
+  /// Filtra as partidas já carregadas no [PartidaProvider] por este time,
+  /// sem precisar de chamada adicional à API.
+  List<Widget> _buildHistoricoPartidas(BuildContext context) {
+    final partidas = context
+        .watch<PartidaProvider>()
+        .partidas
+        .where((p) =>
+            p.isFinalizada &&
+            (p.timeMandanteId == widget.timeId ||
+                p.timeVisitanteId == widget.timeId))
+        .toList()
+      ..sort((a, b) =>
+          (b.data ?? DateTime(0)).compareTo(a.data ?? DateTime(0)));
+
+    if (partidas.isEmpty) {
+      return [
+        const Padding(
+          padding: EdgeInsets.all(32),
+          child: EmptyState(
+            icon: Icons.history_outlined,
+            title: 'Nenhuma partida finalizada',
+            subtitle:
+                'O histórico aparecerá aqui após o registro de resultados.',
+          ),
+        ),
+      ];
+    }
+
+    return partidas
+        .map((p) => _PartidaHistoricoTile(
+              partida: p,
+              timeId: widget.timeId,
+              campeonatoId: widget.campeonatoId,
+            ))
+        .toList();
+  }
+}
+
+// ── Widgets privados ────────────────────────────────────────────────────────
+
+/// Card de um item do histórico de partidas (RF 13).
+class _PartidaHistoricoTile extends StatelessWidget {
+  final Partida partida;
+  final int timeId;
+  final int campeonatoId;
+
+  const _PartidaHistoricoTile({
+    required this.partida,
+    required this.timeId,
+    required this.campeonatoId,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final golsM = partida.golsMandante ?? 0;
+    final golsV = partida.golsVisitante ?? 0;
+
+    return Card(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () => context
+            .push('/campeonato/$campeonatoId/partida/${partida.id}/sumula'),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Column(
+            children: [
+              // Placar
+              Row(
+                children: [
+                  TeamShield(
+                    escudoUrl: partida.escudoMandante,
+                    nome: partida.nomeMandante ?? '',
+                    size: 28,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      partida.nomeMandante ?? 'Mandante',
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.end,
+                    ),
+                  ),
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 8),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .primaryContainer,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      '$golsM x $golsV',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      partida.nomeVisitante ?? 'Visitante',
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  TeamShield(
+                    escudoUrl: partida.escudoVisitante,
+                    nome: partida.nomeVisitante ?? '',
+                    size: 28,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              // Resultado do time + data
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _ResultadoChip(partida: partida, timeId: timeId),
+                  if (partida.data != null)
+                    Text(
+                      DateFormatters.data(partida.data),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Colors.grey.shade600,
+                          ),
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Chip colorido indicando o resultado do time (Vitória / Empate / Derrota).
+class _ResultadoChip extends StatelessWidget {
+  final Partida partida;
+  final int timeId;
+
+  const _ResultadoChip({required this.partida, required this.timeId});
+
+  @override
+  Widget build(BuildContext context) {
+    final golsM = partida.golsMandante ?? 0;
+    final golsV = partida.golsVisitante ?? 0;
+    final isMandante = partida.timeMandanteId == timeId;
+
+    final int golsTime = isMandante ? golsM : golsV;
+    final int golsAdv = isMandante ? golsV : golsM;
+
+    final String label;
+    final Color color;
+
+    if (golsTime > golsAdv) {
+      label = 'Vitória';
+      color = AppTheme.golColor;
+    } else if (golsTime == golsAdv) {
+      label = 'Empate';
+      color = AppTheme.statusEncerrado;
+    } else {
+      label = 'Derrota';
+      color = AppTheme.errorColor;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.5)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: color,
+        ),
+      ),
     );
   }
 }

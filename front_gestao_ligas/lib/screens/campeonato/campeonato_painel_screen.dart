@@ -70,6 +70,10 @@ class _CampeonatoPainelScreenState extends State<CampeonatoPainelScreen>
                   case 'editar':
                     context.push('/campeonato/${widget.campeonatoId}/editar');
                     break;
+                  case 'administradores':
+                    context.push(
+                        '/campeonato/${widget.campeonatoId}/administradores');
+                    break;
                   case 'gerar_calendario':
                     final confirm = await DialogHelper.showConfirmation(
                       context,
@@ -136,6 +140,15 @@ class _CampeonatoPainelScreenState extends State<CampeonatoPainelScreen>
                   child: ListTile(
                     leading: Icon(Icons.calendar_month),
                     title: Text('Gerar Calendário'),
+                    dense: true,
+                  ),
+                ),
+                // RF 17 — Gerenciar co-administradores
+                const PopupMenuItem(
+                  value: 'administradores',
+                  child: ListTile(
+                    leading: Icon(Icons.admin_panel_settings_outlined),
+                    title: Text('Administradores'),
                     dense: true,
                   ),
                 ),
