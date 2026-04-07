@@ -31,7 +31,7 @@ class _CriarTimeScreenState extends State<CriarTimeScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     final provider = context.read<TimeProvider>();
-    final success = await provider.criar({
+    final success = await provider.criar(widget.campeonatoId, {
       'nome': _nomeController.text.trim(),
       'localidade': _localidadeController.text.trim(),
       'campeonato_id': widget.campeonatoId,

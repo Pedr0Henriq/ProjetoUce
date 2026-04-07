@@ -51,7 +51,7 @@ class _GestaoLigasAppState extends State<GestaoLigasApp> {
     _authRepo = UsuarioRepository(dao: _database.usuarioDao, api: _apiClient);
     _campeonatoRepo = CampeonatoRepository(dao: _database.campeonatoDao, api: _apiClient);
     _timeRepo = TimeRepository(dao: _database.timeDao, api: _apiClient);
-    _partidaRepo = PartidaRepository(dao: _database.partidaDao, api: _apiClient);
+    _partidaRepo = PartidaRepository(dao: _database.partidaDao, campeonatoRepository: _campeonatoRepo, api: _apiClient);
     _classificacaoRepo = ClassificacaoRepository(dao: _database.campeonatoDao, api: _apiClient);
 
     _authProvider = AuthProvider(_authRepo, _apiClient)..checkAuth();

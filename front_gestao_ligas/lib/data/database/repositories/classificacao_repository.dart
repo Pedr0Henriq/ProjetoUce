@@ -63,21 +63,12 @@ class ClassificacaoRepository {
     }
   }
 
-  Future<List<Map<String, dynamic>>> artilharia(int campeonatoId) async {
+  Future<List<Map<String, dynamic>>> artilhariaEAssistencia(int campeonatoId) async {
     try {
       final response = await api.get('/campeonatos/$campeonatoId/artilharia');
       return (response as List).cast<Map<String, dynamic>>();
     } catch (e) {
       return []; 
-    }
-  }
-
-  Future<List<Map<String, dynamic>>> assistencias(int campeonatoId) async {
-    try {
-      final response = await api.get('/campeonatos/$campeonatoId/assistencias');
-      return (response as List).cast<Map<String, dynamic>>();
-    } catch (e) {
-      return [];
     }
   }
 }

@@ -50,13 +50,13 @@ class TimeProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> criar(Map<String, dynamic> dados) async {
+  Future<bool> criar(int campeonatoId, Map<String, dynamic> dados) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      final novo = await _repo.criar(dados);
+      final novo = await _repo.criar(campeonatoId, dados);
       _times.add(novo);
       _isLoading = false;
       notifyListeners();

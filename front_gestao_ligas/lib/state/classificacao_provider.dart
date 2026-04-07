@@ -42,7 +42,7 @@ class ClassificacaoProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _artilheiros = await _repo.artilharia(campeonatoId);
+      _artilheiros = await _repo.artilhariaEAssistencia(campeonatoId);
       _isLoading = false;
       notifyListeners();
     } catch (e) {
@@ -58,7 +58,7 @@ class ClassificacaoProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _assistencias = await _repo.assistencias(campeonatoId);
+      _assistencias = await _repo.artilhariaEAssistencia(campeonatoId);
       _isLoading = false;
       notifyListeners();
     } catch (e) {
@@ -77,12 +77,10 @@ class ClassificacaoProvider extends ChangeNotifier {
     try {
       final results = await Future.wait([
         _repo.buscarPorCampeonato(campeonatoId),
-        _repo.artilharia(campeonatoId),
-        _repo.assistencias(campeonatoId),
+        _repo.artilhariaEAssistencia(campeonatoId),
       ]);
       _classificacao = results[0] as List<Classificacao>;
       _artilheiros = results[1] as List<Map<String, dynamic>>;
-      _assistencias = results[2] as List<Map<String, dynamic>>;
       _isLoading = false;
       notifyListeners();
     } catch (e) {

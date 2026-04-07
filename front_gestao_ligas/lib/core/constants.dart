@@ -10,10 +10,10 @@ class AppConstants {
 
   static String get apiBaseUrl {
     if (kIsWeb) {
-      return 'http://localhost:5000/api'; // Flutter Web
+      return 'http://localhost:5000/v1'; // Flutter Web
     }
     // Android (físico ou emulator) e demais plataformas → IP da rede local
-    return 'http://$_hostIP:5000/api';
+    return 'http://$_hostIP:5000/v1';
   }
 
   static const Duration apiTimeout = Duration(seconds: 15);

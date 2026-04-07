@@ -3,7 +3,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.models import Jogador, Time, Campeonato, Usuario
 from app import db
 
-j
+
 jogadores_bp = Blueprint('jogadores', __name__)
 
 from app.routes.administradores import is_campeonato_admin

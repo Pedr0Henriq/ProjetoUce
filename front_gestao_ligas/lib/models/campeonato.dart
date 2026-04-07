@@ -1,4 +1,17 @@
-enum TipoCampeonato { pontoCorrido, eliminatoria }
+enum TipoCampeonato {
+  pontoCorrido('pontos_corridos'),
+  eliminatoria('eliminatoria');
+
+  const TipoCampeonato(this.label);
+
+  final String label;
+
+  static String of(String name) {
+    return TipoCampeonato.values
+        .firstWhere((value) => value.label == name)
+        .label;
+  }
+}
 
 enum StatusCampeonato {
   naoIniciado('NAO_INICIADO', 'naoIniciado'),

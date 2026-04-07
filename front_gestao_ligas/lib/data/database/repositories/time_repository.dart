@@ -86,8 +86,8 @@ class TimeRepository {
     }
   }
 
-  Future<domain_time.Time> criar(Map<String, dynamic> dados) async {
-    final response = await api.post('/times', dados);
+  Future<domain_time.Time> criar(int campeonatoId, Map<String, dynamic> dados) async {
+    final response = await api.post('/campeonatos/$campeonatoId/times', dados);
     final novoTime = domain_time.Time.fromJson(
       response as Map<String, dynamic>,
     );

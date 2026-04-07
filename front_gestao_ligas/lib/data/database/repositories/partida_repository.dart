@@ -1,16 +1,20 @@
 import 'package:drift/drift.dart' as drift;
+import 'package:flutter/cupertino.dart';
 import 'package:front_gestao_ligas/data/api_client.dart';
 import 'package:front_gestao_ligas/data/database/daos/partida_dao.dart';
 import 'package:front_gestao_ligas/data/database/database.dart' as db;
+import 'package:front_gestao_ligas/data/database/repositories/campeonato_repository.dart';
+import 'package:front_gestao_ligas/models/models.dart';
 import 'package:front_gestao_ligas/models/partida.dart' as domain;
 import 'package:front_gestao_ligas/models/evento_partida.dart' as domain_evento;
 
 /// Repositório de partidas (RF 07, RF 08) e Registrar resultado e eventos (RF 04)
 class PartidaRepository {
   final PartidaDao dao;
+  final CampeonatoRepository campeonatoRepository;
   final ApiClient api;
 
-  PartidaRepository({required this.dao, required this.api});
+  PartidaRepository({required this.dao, required this.campeonatoRepository, required this.api});
 
   domain.Partida _mapPartidaToDomain(PartidaComDetalhes detalhe) {
     domain.StatusPartida statusDomain;
@@ -109,7 +113,19 @@ class PartidaRepository {
   }
 
   Future<void> gerarCalendario(int campeonatoId) async {
-    await api.post('/campeonatos/$campeonatoId/gerar-calendario', {});
+    try {
+    final campeonato = await campeonatoRepository.buscarPorId(campeonatoId);
+    debugPrint('${TipoCampeonato.of(campeonato.tipo.label).toUpperCase()}');
+    final response = await api.post('/campeonatos/$campeonatoId/gerar-calendario', {
+      'tipo_geracao': TipoCampeonato.of(campeonato.tipo.label).toUpperCase(),
+      'data_primeira_rodada': campeonato.dataInicio.toIso8601String().split('T')[0]
+    });
+
+    debugPrint('Resposta: $response');
+    } catch (e,stack) {
+    debugPrint(e.toString());
+     debugPrintStack(stackTrace: stack);
+    }
   }
 
   Future<domain.Partida> criar(Map<String, dynamic> dados) async {
@@ -137,7 +153,10 @@ class PartidaRepository {
     await dao.deletarPartida(id);
   }
 
-Future<void> registrarResultado(int partidaId, Map<String, dynamic> resultadoMap) async {
+  Future<void> registrarResultado(
+    int partidaId,
+    Map<String, dynamic> resultadoMap,
+  ) async {
     await api.post('/partidas/$partidaId/resultado', resultadoMap);
 
     final companion = db.ResultadosCompanion.insert(
@@ -145,15 +164,19 @@ Future<void> registrarResultado(int partidaId, Map<String, dynamic> resultadoMap
       golsMandante: resultadoMap['gols_mandante'] as int,
       golsVisitante: resultadoMap['gols_visitante'] as int,
       registradoPor: resultadoMap['registrado_por'] as int,
-      registradoEm: DateTime.parse(resultadoMap['registrado_em'] ?? DateTime.now().toIso8601String()),
+      registradoEm: DateTime.parse(
+        resultadoMap['registrado_em'] ?? DateTime.now().toIso8601String(),
+      ),
     );
-    
+
     await dao.registrarResultado(companion);
 
     final partidaAtual = await dao.obterPartidaPorId(partidaId);
     if (partidaAtual != null) {
       await dao.atualizarPartida(
-        partidaAtual.partida.toCompanion(true).copyWith(status: const drift.Value('finalizada'))
+        partidaAtual.partida
+            .toCompanion(true)
+            .copyWith(status: const drift.Value('finalizada')),
       );
     }
   }
