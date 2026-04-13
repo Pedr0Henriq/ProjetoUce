@@ -1,5 +1,5 @@
 # Backend (Python / Flask)
-back_gestao_ligas/venv/
+back_gestao_ligas/.venv/
 back_gestao_ligas/env/
 back_gestao_ligas/__pycache__/
 back_gestao_ligas/**/*.pyc

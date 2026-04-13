@@ -1,4 +1,4 @@
-package com.example.front_gestao_ligas
+package br.ufpb.gestaoligas
 
 import io.flutter.embedding.android.FlutterActivity
 
