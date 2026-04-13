@@ -195,6 +195,15 @@ class _CampeonatoCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         onTap: () => context.push('/campeonato/${campeonato.id}'),
         onLongPress: () async {
+          final isAdmin = context.read<AuthProvider>().isAdmin;
+          if (!isAdmin) {
+            DialogHelper.showError(
+              context,
+              'Apenas administradores podem excluir campeonatos.',
+            );
+            return;
+          }
+
           final confirm = await DialogHelper.showConfirmation(
                   context,
                   title: 'Remover',

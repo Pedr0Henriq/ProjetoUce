@@ -60,6 +60,25 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  /// Cadastro público (RF 01)
+  Future<bool> register(String nome, String email, String senha) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      await _repo.register(nome: nome, email: email, senha: senha);
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
   /// Logout (RF 11)
   Future<void> logout() async {
     await _repo.logout();

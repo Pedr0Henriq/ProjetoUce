@@ -2,6 +2,7 @@ import 'package:go_router/go_router.dart';
 import '../../state/auth_provider.dart';
 import '../../screens/splash_screen.dart';
 import '../../screens/auth/login_screen.dart';
+import '../../screens/auth/cadastro_screen.dart';
 import '../../screens/auth/recuperar_senha_screen.dart';
 import '../../screens/perfil/perfil_screen.dart';
 import '../../screens/campeonatos/campeonatos_screen.dart';
@@ -17,7 +18,7 @@ import '../../screens/campeonato/widgets/jogador_form_screen.dart';
 
 /// Configuração de rotas da aplicação com GoRouter.
 ///
-/// Rotas públicas (sem autenticação): /splash, /login, /recuperar-senha
+/// Rotas públicas (sem autenticação): /splash, /login, /register, /recuperar-senha
 /// Rotas protegidas: todas as demais — redirecionam para /login se não autenticado.
 class AppRouter {
   final AuthProvider authProvider;
@@ -34,14 +35,29 @@ class AppRouter {
 
       // Rotas públicas que não requerem autenticação
       final isPublicRoute = loc == '/login' ||
+          loc == '/register' ||
           loc == '/recuperar-senha' ||
           loc == '/splash';
+
+      // Rotas que exigem perfil administrador.
+      final isAdminOnlyRoute =
+          loc == '/campeonatos/criar' ||
+          RegExp(r'^/campeonato/\d+/editar$').hasMatch(loc) ||
+          RegExp(r'^/campeonato/\d+/administradores$').hasMatch(loc) ||
+          RegExp(r'^/campeonato/\d+/criar-time$').hasMatch(loc) ||
+          RegExp(r'^/campeonato/\d+/time/\d+/jogador$').hasMatch(loc) ||
+          RegExp(r'^/campeonato/\d+/partida/\d+/resultado$').hasMatch(loc);
 
       if (!isAuthenticated && !isPublicRoute) {
         return '/login';
       }
       // Usuário autenticado tentando acessar login → redireciona para início
-      if (isAuthenticated && (loc == '/login' || loc == '/recuperar-senha')) {
+      if (isAuthenticated &&
+          (loc == '/login' || loc == '/register' || loc == '/recuperar-senha')) {
+        return '/campeonatos';
+      }
+      // Visualizador tentando acessar rota de escrita/configuração.
+      if (isAuthenticated && !authProvider.isAdmin && isAdminOnlyRoute) {
         return '/campeonatos';
       }
       return null;
@@ -59,6 +75,11 @@ class AppRouter {
         path: '/login',
         name: 'login',
         builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: '/register',
+        name: 'register',
+        builder: (context, state) => const CadastroScreen(),
       ),
       GoRoute(
         path: '/recuperar-senha',

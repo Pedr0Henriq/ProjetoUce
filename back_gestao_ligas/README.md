@@ -47,6 +47,10 @@ Copie `.env.example` para `.env` e preencha os campos:
 | `JWT_SECRET_KEY` | Chave secreta para assinatura dos tokens JWT |
 | `SQLALCHEMY_DATABASE_URI` | URI de conexão com o banco de dados |
 | `CORS_ORIGINS` | Origens permitidas no CORS (`*` em dev local) |
+| `BOOTSTRAP_ADMIN_ENABLED` | Ativa criação/promoção automática do primeiro ADMIN (`true/false`) |
+| `BOOTSTRAP_ADMIN_NAME` | Nome do administrador inicial |
+| `BOOTSTRAP_ADMIN_EMAIL` | E-mail do administrador inicial |
+| `BOOTSTRAP_ADMIN_PASSWORD` | Senha inicial do administrador |
 
 ---
 
@@ -81,7 +85,7 @@ Retorna `{"status": "ok", "versao": "1.1.0"}` — use para verificar conectivida
 | Método | Rota | Descrição | Auth |
 |--------|------|-----------|------|
 | POST | `/login` | Login com e-mail e senha; retorna JWT | — |
-| POST | `/register` | Cadastrar novo usuário | — |
+| POST | `/register` | Cadastrar novo usuário (sempre perfil VIEWER) | — |
 | GET | `/perfil` | Dados do usuário autenticado | JWT |
 | PUT | `/perfil` | Atualizar nome, e-mail ou senha | JWT |
 | POST | `/recuperar-senha` | Solicitar link de redefinição | — |
@@ -185,6 +189,17 @@ Authorization: Bearer <access_token>
 ```
 
 Tokens expiram em **1 hora**. Use `POST /v1/auth/refresh` para renovar sem reautenticar.
+
+No cadastro público (`POST /v1/auth/register`), o perfil é sempre salvo como `VIEWER`.
+Tentativas de registrar conta com perfil `ADMIN` são rejeitadas com erro `400`.
+
+## Bootstrap do Primeiro Administrador
+
+Na inicialização da API, se `BOOTSTRAP_ADMIN_ENABLED=true` e ainda não existir
+nenhum usuário com perfil `ADMIN`, o sistema cria (ou promove por e-mail)
+uma conta administrativa usando as variáveis `BOOTSTRAP_ADMIN_*`.
+
+Recomendação: após o primeiro login, altere imediatamente a senha inicial.
 
 ---
 

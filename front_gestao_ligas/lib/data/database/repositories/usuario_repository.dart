@@ -53,6 +53,20 @@ class UsuarioRepository {
     return data;
   }
 
+  Future<void> register({
+    required String nome,
+    required String email,
+    required String senha,
+  }) async {
+    await api.post('/auth/register', {
+      'nome': nome.trim(),
+      'email': email.trim().toLowerCase(),
+      'senha': senha,
+      // Cadastro público sempre visualizador.
+      'perfil': 'VIEWER',
+    });
+  }
+
   Future<void> logout() async {
     try {
       await api.post('/auth/logout', {});

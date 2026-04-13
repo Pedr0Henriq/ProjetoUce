@@ -2,6 +2,13 @@
 
 Aplicativo Flutter para consumo da API do projeto, com foco em gerenciamento de campeonatos, partidas e estatisticas.
 
+## 0. Autenticacao e Perfis
+
+- Cadastro publico disponivel na tela "Criar Conta"
+- Novas contas sao sempre criadas como Visualizador (Analista)
+- Acoes de escrita/configuracao/exclusao ficam restritas a Administrador
+- Rotas administrativas no app sao bloqueadas para visualizador
+
 ## 1. Requisitos
 
 - Flutter SDK 3.24+
@@ -103,6 +110,10 @@ flutter test
 
 ### Sessao expirada
 - refaca login
+
+### Nao encontro o cadastro
+- na tela de login, toque em "Nao tem conta? Criar conta"
+- apos criar a conta, faca login normalmente
 
 ### Erro de CORS na Web
 - ajuste `CORS_ORIGINS` no backend

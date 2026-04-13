@@ -10,6 +10,14 @@ load_dotenv()
 db = SQLAlchemy()
 jwt = JWTManager()
 
+
+def _env_bool(name, default=False):
+    """Converte variável de ambiente em booleano."""
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() in {'1', 'true', 'yes', 'y', 'on'}
+
 def create_app():
     app = Flask(__name__)
     cors_origins = os.environ.get('CORS_ORIGINS', '*')
@@ -60,5 +68,34 @@ def create_app():
 
     with app.app_context():
         db.create_all()
+
+        # Bootstrap idempotente do primeiro administrador global.
+        # Se já existir qualquer ADMIN, nada é feito.
+        if _env_bool('BOOTSTRAP_ADMIN_ENABLED', default=True):
+            from app.models import Usuario
+
+            admin_existente = Usuario.query.filter_by(perfil='ADMIN').first()
+            if not admin_existente:
+                admin_nome = os.environ.get('BOOTSTRAP_ADMIN_NAME', 'Administrador Inicial').strip() or 'Administrador Inicial'
+                admin_email = os.environ.get('BOOTSTRAP_ADMIN_EMAIL', 'admin@ligas.local').strip().lower() or 'admin@ligas.local'
+                admin_senha = os.environ.get('BOOTSTRAP_ADMIN_PASSWORD', 'admin123')
+
+                usuario_mesmo_email = Usuario.query.filter_by(email=admin_email).first()
+                if usuario_mesmo_email:
+                    usuario_mesmo_email.perfil = 'ADMIN'
+                    if not usuario_mesmo_email.senha_hash:
+                        usuario_mesmo_email.set_senha(admin_senha)
+                    db.session.commit()
+                    app.logger.warning('Bootstrap ADMIN: usuário existente promovido para ADMIN (%s). Troque a senha após o primeiro login.', admin_email)
+                else:
+                    novo_admin = Usuario(
+                        nome=admin_nome,
+                        email=admin_email,
+                        perfil='ADMIN',
+                    )
+                    novo_admin.set_senha(admin_senha)
+                    db.session.add(novo_admin)
+                    db.session.commit()
+                    app.logger.warning('Bootstrap ADMIN: conta inicial criada (%s). Troque a senha após o primeiro login.', admin_email)
 
     return app

@@ -7,30 +7,65 @@ from app import db
 
 # Padrão simples para validação de formato de e-mail
 _EMAIL_RE = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+_SENHA_MIN_LEN = 6
+
+
+def _normalizar_perfil_cadastro(perfil_raw):
+    """Normaliza o perfil aceito no cadastro público.
+
+    Regras:
+    - Ausente ou aliases de visualização => VIEWER
+    - ADMIN é proibido no cadastro público
+    - Demais valores são inválidos
+    """
+    if perfil_raw is None:
+        return 'VIEWER'
+
+    perfil = str(perfil_raw).strip().upper()
+    if perfil in ('', 'VIEWER', 'ANALISTA', 'VISUALIZADOR'):
+        return 'VIEWER'
+    if perfil == 'ADMIN':
+        raise ValueError('Cadastro público não permite perfil ADMIN.')
+    raise ValueError('Perfil inválido para cadastro público.')
 
 # Criamos o Blueprint para as rotas de autenticação
 auth_bp = Blueprint('auth', __name__)
 
 @auth_bp.route('/register', methods=['POST'])
 def register():
-    dados = request.get_json()
+    dados = request.get_json(silent=True) or {}
+
+    nome = str(dados.get('nome', '')).strip()
+    email = str(dados.get('email', '')).strip().lower()
+    senha = dados.get('senha')
     
     # Validação básica para não quebrar o banco se faltarem dados essenciais
-    if not dados or not dados.get('nome') or not dados.get('email') or not dados.get('senha'):
+    if not nome or not email or senha is None:
         return jsonify({"erro": "Nome, e-mail e senha são obrigatórios"}), 400
 
-    if not _EMAIL_RE.match(dados['email']):
+    if not _EMAIL_RE.match(email):
         return jsonify({"erro": "Formato de e-mail inválido."}), 400
 
+    if not isinstance(senha, str) or not senha.strip():
+        return jsonify({"erro": "Senha é obrigatória."}), 400
+
+    if len(senha) < _SENHA_MIN_LEN:
+        return jsonify({"erro": f"A senha deve ter no mínimo {_SENHA_MIN_LEN} caracteres."}), 400
+
     # Verifica se o e-mail já existe no banco
-    if Usuario.query.filter_by(email=dados.get('email')).first():
+    if Usuario.query.filter_by(email=email).first():
         return jsonify({"erro": "E-mail já cadastrado"}), 400
+
+    try:
+        perfil = _normalizar_perfil_cadastro(dados.get('perfil'))
+    except ValueError as exc:
+        return jsonify({"erro": str(exc)}), 400
         
-    # Cria a instância do usuário (o perfil padrão será VIEWER se não for enviado)
+    # Cadastro público sempre cria usuário com perfil de visualização.
     novo_usuario = Usuario(
-        nome=dados.get('nome'),
-        email=dados.get('email'),
-        perfil=dados.get('perfil', 'VIEWER') 
+        nome=nome,
+        email=email,
+        perfil=perfil,
     )
     
     # Usa o método que criamos para gerar o hash da senha de forma segura
