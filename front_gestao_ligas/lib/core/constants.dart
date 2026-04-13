@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
 
 /// Constantes da aplicação
 class AppConstants {
@@ -14,15 +14,21 @@ class AppConstants {
     defaultValue: '',
   );
 
-  // Default para Android Emulator: 10.0.2.2
-  static const String _hostIP = String.fromEnvironment(
-    'API_HOST',
-    defaultValue: '10.0.2.2',
-  );
   static const String _port = String.fromEnvironment(
     'API_PORT',
     defaultValue: '5005',
   );
+
+  static String get _hostIP {
+    const envHost = String.fromEnvironment('API_HOST', defaultValue: '');
+    if (envHost.isNotEmpty) return envHost;
+    
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      return '10.0.2.2';
+    }
+    // Default para iOS Simulator, macOS e web locais
+    return '127.0.0.1';
+  }
 
   static String get apiBaseUrl {
     final explicitBaseUrl = _baseUrl.trim();

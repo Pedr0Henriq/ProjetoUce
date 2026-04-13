@@ -45,7 +45,7 @@ def listar_administradores(campeonato_id):
         return jsonify({"erro": "Acesso negado."}), 403
 
     lista = [
-        {"id": admin.id, "nome": admin.nome, "email": admin.email}
+        admin.to_dict()
         for admin in campeonato.administradores
     ]
     return jsonify(lista), 200
@@ -87,7 +87,7 @@ def adicionar_administrador(campeonato_id):
 
     return jsonify({
         "mensagem": "Administrador vinculado com sucesso.",
-        "usuario": {"id": novo_admin.id, "nome": novo_admin.nome, "email": novo_admin.email}
+        "usuario": novo_admin.to_dict()
     }), 201
 
 

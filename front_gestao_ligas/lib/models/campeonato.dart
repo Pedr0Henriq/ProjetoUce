@@ -1,6 +1,6 @@
 enum TipoCampeonato {
-  pontoCorrido('pontos_corridos'),
-  eliminatoria('eliminatoria');
+  pontoCorrido('PONTOS_CORRIDOS'),
+  eliminatoria('ELIMINATORIA');
 
   const TipoCampeonato(this.label);
 
@@ -63,7 +63,7 @@ class Campeonato {
       id: json['id'] as int,
       nome: json['nome'] as String,
       modalidade: json['modalidade'] as String,
-      tipo: (tipoRaw == 'ponto_corrido' || tipoRaw == 'pontos_corridos')
+      tipo: (tipoRaw == 'ponto_corrido' || tipoRaw == 'pontos_corridos' || tipoRaw == 'pontos_corridos')
           ? TipoCampeonato.pontoCorrido
           : TipoCampeonato.eliminatoria,
       numEquipes: json['num_equipes'] as int,
@@ -79,8 +79,8 @@ class Campeonato {
       'nome': nome,
       'modalidade': modalidade,
       'tipo': tipo == TipoCampeonato.pontoCorrido
-          ? 'ponto_corrido'
-          : 'eliminatoria',
+          ? 'PONTOS_CORRIDOS'
+          : 'ELIMINATORIA',
       'num_equipes': numEquipes,
       'data_inicio': dataInicio.toIso8601String(),
       'status': status,

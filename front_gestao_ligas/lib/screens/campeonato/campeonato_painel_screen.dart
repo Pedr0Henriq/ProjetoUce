@@ -90,6 +90,13 @@ class _CampeonatoPainelScreenState extends State<CampeonatoPainelScreen>
                         if (success) {
                           DialogHelper.showSuccess(
                               context, 'Calendário gerado com sucesso!');
+                        } else {
+                          final erro = context.read<PartidaProvider>().error;
+                          if (erro != null) {
+                            DialogHelper.showError(context, erro);
+                          } else {
+                            DialogHelper.showError(context, 'Falha ao gerar o calendário.');
+                          }
                         }
                       }
                     }

@@ -61,7 +61,11 @@ class TimeRepository {
       final timesApi = list.map((e) => domain_time.Time.fromJson(e)).toList();
 
       for (var time in timesApi) {
-        await dao.atualizarTime(_timeToCompanion(time));
+        final companion = _timeToCompanion(time);
+        final updated = await dao.atualizarTime(companion);
+        if (!updated) {
+          await dao.criarTime(companion);
+        }
       }
 
       return timesApi;
@@ -78,7 +82,11 @@ class TimeRepository {
         response as Map<String, dynamic>,
       );
 
-      await dao.atualizarTime(_timeToCompanion(timeApi));
+      final companion = _timeToCompanion(timeApi);
+      final updated = await dao.atualizarTime(companion);
+      if (!updated) {
+        await dao.criarTime(companion);
+      }
       return timeApi;
     } catch (e) {
       final dadoDrift = await dao.obterTimePorId(id);
@@ -92,7 +100,11 @@ class TimeRepository {
       response as Map<String, dynamic>,
     );
 
-    await dao.atualizarTime(_timeToCompanion(novoTime));
+    final companion = _timeToCompanion(novoTime);
+    final updated = await dao.atualizarTime(companion);
+    if (!updated) {
+      await dao.criarTime(companion);
+    }
     return novoTime;
   }
 
@@ -102,7 +114,11 @@ class TimeRepository {
       response as Map<String, dynamic>,
     );
 
-    await dao.atualizarTime(_timeToCompanion(timeAtualizado));
+    final companion = _timeToCompanion(timeAtualizado);
+    final updated = await dao.atualizarTime(companion);
+    if (!updated) {
+      await dao.criarTime(companion);
+    }
     return timeAtualizado;
   }
 
@@ -120,7 +136,11 @@ class TimeRepository {
           .toList();
 
       for (var jogador in jogadoresApi) {
-        await dao.atualizarJogador(_jogadorToCompanion(jogador));
+        final companion = _jogadorToCompanion(jogador);
+        final updated = await dao.atualizarJogador(companion);
+        if (!updated) {
+          await dao.adicionarJogador(companion);
+        }
       }
 
       return jogadoresApi;
@@ -134,7 +154,11 @@ class TimeRepository {
     final response = await api.post('/times/$timeId/jogadores', dados);
     final novoJogador = domain_jogador.Jogador.fromJson(response as Map<String, dynamic>);
     
-    await dao.atualizarJogador(_jogadorToCompanion(novoJogador));
+    final companion = _jogadorToCompanion(novoJogador);
+    final updated = await dao.atualizarJogador(companion);
+    if (!updated) {
+      await dao.adicionarJogador(companion);
+    }
     return novoJogador;
   }
 
@@ -142,7 +166,11 @@ class TimeRepository {
     final response = await api.put('/jogadores/$jogadorId', dados);
     final novoJogador = domain_jogador.Jogador.fromJson(response as Map<String, dynamic>);
     
-    await dao.atualizarJogador(_jogadorToCompanion(novoJogador));
+    final companion = _jogadorToCompanion(novoJogador);
+    final updated = await dao.atualizarJogador(companion);
+    if (!updated) {
+      await dao.adicionarJogador(companion);
+    }
 
     return novoJogador;
   }

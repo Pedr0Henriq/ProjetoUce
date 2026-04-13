@@ -26,8 +26,8 @@ class CampeonatoRepository {
       nome: data.nome,
       modalidade: data.modalidade,
       tipo: (tipo == 'ponto_corrido' || tipo == 'pontos_corridos')
-          ? TipoCampeonato.pontoCorrido 
-          : TipoCampeonato.eliminatoria,
+          ? domain.TipoCampeonato.pontoCorrido 
+          : domain.TipoCampeonato.eliminatoria,
       numEquipes: data.numEquipes,
       dataInicio: data.dataInicio,
       status: StatusCampeonato.to(data.status),
@@ -57,7 +57,7 @@ class CampeonatoRepository {
       id: Value(campeonato.id),
       nome: Value(campeonato.nome),
       modalidade: Value(campeonato.modalidade),
-      tipo: Value(campeonato.tipo == domain.TipoCampeonato.pontoCorrido ? 'ponto_corrido' : 'eliminatoria'),
+      tipo: Value(campeonato.tipo == domain.TipoCampeonato.pontoCorrido ? 'PONTOS_CORRIDOS' : 'ELIMINATORIA'),
       numEquipes: Value(campeonato.numEquipes),
       dataInicio: Value(campeonato.dataInicio),
       status: Value(StatusCampeonato.of(campeonato.status)),
