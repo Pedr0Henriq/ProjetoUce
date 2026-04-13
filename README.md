@@ -256,3 +256,13 @@ python run.py
 - Versao em texto: `requisitos_extraido.txt`
 - Backend README: `back_gestao_ligas/README.md`
 - Frontend README: `front_gestao_ligas/README.md`
+
+## 11. Screenshots
+
+<img src="https://github.com/user-attachments/assets/3f490055-5870-49ba-b831-90bc1736dac1" width="250"/>
+
+<img src="https://github.com/user-attachments/assets/3ca256c2-a80d-4b6f-9295-245624b2e925" width="250"/>
+
+<img src="https://github.com/user-attachments/assets/4c4e5ee9-2b1b-4810-a8d3-89d2856c5fb0" width="250"/>
+
+<img src="https://github.com/user-attachments/assets/44195e8c-fbe8-4ba4-a14d-1cf61f9ab30e" width="250"/>
