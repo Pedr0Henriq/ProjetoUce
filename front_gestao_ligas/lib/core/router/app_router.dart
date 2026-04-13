@@ -15,6 +15,7 @@ import '../../screens/partidas/sumula_screen.dart';
 import '../../screens/campeonato/widgets/time_ficha_screen.dart';
 import '../../screens/campeonato/widgets/criar_time_screen.dart';
 import '../../screens/campeonato/widgets/jogador_form_screen.dart';
+import '../../screens/admin/usuarios_admin_screen.dart';
 
 /// Configuração de rotas da aplicação com GoRouter.
 ///
@@ -41,6 +42,7 @@ class AppRouter {
 
       // Rotas que exigem perfil administrador.
       final isAdminOnlyRoute =
+          loc == '/admin/usuarios' ||
           loc == '/campeonatos/criar' ||
           RegExp(r'^/campeonato/\d+/editar$').hasMatch(loc) ||
           RegExp(r'^/campeonato/\d+/administradores$').hasMatch(loc) ||
@@ -92,6 +94,11 @@ class AppRouter {
         path: '/perfil',
         name: 'perfil',
         builder: (context, state) => const PerfilScreen(),
+      ),
+      GoRoute(
+        path: '/admin/usuarios',
+        name: 'admin-usuarios',
+        builder: (context, state) => const UsuariosAdminScreen(),
       ),
 
       // Campeonatos

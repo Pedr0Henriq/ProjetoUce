@@ -93,6 +93,9 @@ def login():
     # Verifica se o usuário existe e compara a senha recebida com o hash salvo
     if not usuario or not usuario.verificar_senha(senha_plana):
         return jsonify({"erro": "E-mail ou senha inválidos"}), 401
+
+    if not usuario.ativo:
+        return jsonify({"erro": "Conta desativada. Entre em contato com um administrador."}), 403
         
     # Cria o token JWT (configurado para expirar em 1 hora, ou 3600 segundos)
     tempo_expiracao = timedelta(hours=1)

@@ -8,6 +8,7 @@ Aplicativo Flutter para consumo da API do projeto, com foco em gerenciamento de 
 - Novas contas sao sempre criadas como Visualizador (Analista)
 - Acoes de escrita/configuracao/exclusao ficam restritas a Administrador
 - Rotas administrativas no app sao bloqueadas para visualizador
+- Administrador possui painel para listar, promover e desativar usuarios
 
 ## 1. Requisitos
 
@@ -114,6 +115,10 @@ flutter test
 ### Nao encontro o cadastro
 - na tela de login, toque em "Nao tem conta? Criar conta"
 - apos criar a conta, faca login normalmente
+
+### Onde fica o painel de usuarios
+- entre em Meu Perfil
+- se sua conta for Administrador, use o botao "Gerenciar Usuarios"
 
 ### Erro de CORS na Web
 - ajuste `CORS_ORIGINS` no backend

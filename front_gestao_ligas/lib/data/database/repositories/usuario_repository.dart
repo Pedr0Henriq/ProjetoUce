@@ -12,11 +12,12 @@ class UsuarioRepository {
   UsuarioRepository({required this.dao, required this.api});
 
   domain.Usuario _mapUsuarioToDomain(db.Usuario data) {
+    final perfilRaw = data.perfil.toUpperCase();
     return domain.Usuario(
       id: data.id,
       nome: data.nome,
       email: data.email,
-      perfil: data.perfil == 'administrador'
+      perfil: perfilRaw == 'ADMIN' || perfilRaw == 'ADMINISTRADOR'
           ? domain.PerfilUsuario.administrador
           : domain.PerfilUsuario.analista,
       criadoEm: data.criadoEm,
@@ -119,11 +120,33 @@ class UsuarioRepository {
       nome: usuario.nome,
       email: usuario.email,
       perfil: usuario.perfil == domain.PerfilUsuario.administrador
-          ? 'administrador'
-          : 'analista',
+          ? 'ADMIN'
+          : 'VIEWER',
       criadoEm: usuario.criadoEm,
     );
     await dao.criarUsuario(companion);
+  }
+
+  // ── Gestão administrativa de usuários ────────────────────────────────────
+
+  Future<List<domain.Usuario>> listarUsuariosAdmin() async {
+    final response = await api.get('/usuarios');
+    final list = response as List;
+    return list
+        .map((e) => domain.Usuario.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<domain.Usuario> promoverUsuario(int usuarioId) async {
+    final response = await api.post('/usuarios/$usuarioId/promover', {});
+    final data = response as Map<String, dynamic>;
+    return domain.Usuario.fromJson(data['usuario'] as Map<String, dynamic>);
+  }
+
+  Future<domain.Usuario> desativarUsuario(int usuarioId) async {
+    final response = await api.post('/usuarios/$usuarioId/desativar', {});
+    final data = response as Map<String, dynamic>;
+    return domain.Usuario.fromJson(data['usuario'] as Map<String, dynamic>);
   }
 
   // ── RF 17 — Administradores Adicionais ────────────────────────────────────

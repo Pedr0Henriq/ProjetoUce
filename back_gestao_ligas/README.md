@@ -93,6 +93,16 @@ Retorna `{"status": "ok", "versao": "1.1.0"}` — use para verificar conectivida
 | POST | `/logout` | Encerrar sessão (invalida no cliente) | JWT |
 | POST | `/refresh` | Renovar token JWT | JWT |
 
+Observação: contas desativadas não conseguem autenticar e tokens antigos são invalidados.
+
+### Usuários (Admin) — `/v1`
+
+| Método | Rota | Descrição | Auth |
+|--------|------|-----------|------|
+| GET | `/usuarios` | Listar usuários do sistema | JWT (ADMIN) |
+| POST | `/usuarios/:id/promover` | Promover usuário para ADMIN | JWT (ADMIN) |
+| POST | `/usuarios/:id/desativar` | Desativar usuário (soft-disable) | JWT (ADMIN) |
+
 ### Campeonatos — `/v1/campeonatos`
 
 | Método | Rota | Descrição | Auth |
@@ -171,6 +181,7 @@ back_gestao_ligas/
 │       ├── partidas.py      # Calendário, resultados, súmula
 │       ├── estatisticas.py  # Classificação + artilharia
 │       ├── administradores.py  # RF17 — co-administradores
+│       ├── usuarios.py      # Gestão administrativa de usuários
 │       └── busca.py         # Busca global
 ├── run.py                   # Entry-point para desenvolvimento
 ├── requirements.txt         # Dependências com versões fixadas

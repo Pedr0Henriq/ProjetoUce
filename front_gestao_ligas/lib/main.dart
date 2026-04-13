@@ -15,6 +15,7 @@ import 'state/classificacao_provider.dart';
 import 'state/partida_provider.dart';
 import 'state/time_provider.dart';
 import 'state/jogador_provider.dart';
+import 'state/usuarios_admin_provider.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -71,6 +72,7 @@ class _GestaoLigasAppState extends State<GestaoLigasApp> {
         ChangeNotifierProvider(create: (_) => PartidaProvider(_partidaRepo)),
         ChangeNotifierProvider(
             create: (_) => ClassificacaoProvider(_classificacaoRepo)),
+        ChangeNotifierProvider(create: (_) => UsuariosAdminProvider(_authRepo)),
       ],
       child: MaterialApp.router(
         title: 'Gestão de Ligas',

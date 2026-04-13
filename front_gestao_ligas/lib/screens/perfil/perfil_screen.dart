@@ -167,6 +167,17 @@ class _PerfilScreenState extends State<PerfilScreen> {
               ),
 
               const SizedBox(height: 32),
+              if (usuario.isAdmin) ...[
+                SizedBox(
+                  height: 50,
+                  child: OutlinedButton.icon(
+                    onPressed: () => context.push('/admin/usuarios'),
+                    icon: const Icon(Icons.admin_panel_settings_outlined),
+                    label: const Text('Gerenciar Usuários'),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
               const Divider(),
               const SizedBox(height: 16),
 
