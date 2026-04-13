@@ -58,11 +58,12 @@ class Campeonato {
   });
 
   factory Campeonato.fromJson(Map<String, dynamic> json) {
+    final tipoRaw = (json['tipo'] ?? '').toString().toLowerCase();
     return Campeonato(
       id: json['id'] as int,
       nome: json['nome'] as String,
       modalidade: json['modalidade'] as String,
-      tipo: json['tipo'] == 'ponto_corrido'
+      tipo: (tipoRaw == 'ponto_corrido' || tipoRaw == 'pontos_corridos')
           ? TipoCampeonato.pontoCorrido
           : TipoCampeonato.eliminatoria,
       numEquipes: json['num_equipes'] as int,

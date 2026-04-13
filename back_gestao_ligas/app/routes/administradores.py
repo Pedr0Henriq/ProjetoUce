@@ -12,6 +12,21 @@ def _e_admin_global(usuario_id):
     return usuario is not None and usuario.perfil == 'ADMIN'
 
 
+def is_campeonato_admin(usuario_id, campeonato):
+    """Retorna True se o usuário for ADMIN global ou co-admin do campeonato."""
+    if campeonato is None:
+        return False
+
+    usuario = Usuario.query.get(usuario_id)
+    if usuario is None:
+        return False
+
+    if usuario.perfil == 'ADMIN':
+        return True
+
+    return any(str(admin.id) == str(usuario_id) for admin in campeonato.administradores)
+
+
 @administradores_bp.route('/campeonatos/<int:campeonato_id>/administradores', methods=['GET'])
 @jwt_required()
 def listar_administradores(campeonato_id):
@@ -24,11 +39,10 @@ def listar_administradores(campeonato_id):
         403: Usuário sem permissão de administrador.
         404: Campeonato não encontrado.
     """
-    usuario_id_logado = get_jwt_identity()
-    if not _e_admin_global(usuario_id_logado):
-        return jsonify({"erro": "Acesso negado."}), 403
-
     campeonato = Campeonato.query.get_or_404(campeonato_id)
+    usuario_id_logado = get_jwt_identity()
+    if not is_campeonato_admin(usuario_id_logado, campeonato):
+        return jsonify({"erro": "Acesso negado."}), 403
 
     lista = [
         {"id": admin.id, "nome": admin.nome, "email": admin.email}
@@ -52,11 +66,10 @@ def adicionar_administrador(campeonato_id):
         403: Requisitante sem permissão de administrador.
         404: Campeonato ou usuário com o e-mail fornecido não encontrado.
     """
-    usuario_id_logado = get_jwt_identity()
-    if not _e_admin_global(usuario_id_logado):
-        return jsonify({"erro": "Acesso negado."}), 403
-
     campeonato = Campeonato.query.get_or_404(campeonato_id)
+    usuario_id_logado = get_jwt_identity()
+    if not is_campeonato_admin(usuario_id_logado, campeonato):
+        return jsonify({"erro": "Acesso negado."}), 403
 
     dados = request.get_json()
     if not dados or not dados.get('email'):
@@ -95,14 +108,14 @@ def remover_administrador(campeonato_id, usuario_id):
         403: Requisitante sem permissão de administrador.
         404: Campeonato, usuário ou vínculo não encontrado.
     """
+    campeonato = Campeonato.query.get_or_404(campeonato_id)
     usuario_id_logado = get_jwt_identity()
-    if not _e_admin_global(usuario_id_logado):
+    if not is_campeonato_admin(usuario_id_logado, campeonato):
         return jsonify({"erro": "Acesso negado."}), 403
 
     if str(usuario_id) == str(usuario_id_logado):
         return jsonify({"erro": "Você não pode remover a si mesmo como administrador."}), 400
 
-    campeonato = Campeonato.query.get_or_404(campeonato_id)
     usuario = Usuario.query.get_or_404(usuario_id)
 
     if usuario not in campeonato.administradores:

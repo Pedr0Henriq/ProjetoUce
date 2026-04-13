@@ -38,33 +38,56 @@ class Partida {
   });
 
   factory Partida.fromJson(Map<String, dynamic> json) {
-    StatusPartida parseStatus(String s) {
-      switch (s) {
+    int? parseNullableInt(dynamic value) {
+      if (value == null) return null;
+      if (value is int) return value;
+      return int.tryParse(value.toString());
+    }
+
+    int parseInt(dynamic value, {int fallback = 0}) {
+      return parseNullableInt(value) ?? fallback;
+    }
+
+    StatusPartida parseStatus(dynamic statusValue) {
+      final status = (statusValue ?? '').toString().toLowerCase();
+      switch (status) {
         case 'em_andamento':
           return StatusPartida.emAndamento;
         case 'finalizada':
           return StatusPartida.finalizada;
+        case 'agendada':
         default:
           return StatusPartida.agendada;
       }
     }
 
+    final timeMandante = json['time_mandante'] as Map<String, dynamic>?;
+    final timeVisitante = json['time_visitante'] as Map<String, dynamic>?;
+
     return Partida(
-      id: json['id'] as int,
-      campeonatoId: json['campeonato_id'] as int,
-      rodada: json['rodada'] as int,
-      timeMandanteId: json['time_mandante_id'] as int,
-      timeVisitanteId: json['time_visitante_id'] as int,
+      id: parseInt(json['id']),
+      campeonatoId: parseInt(json['campeonato_id']),
+      rodada: parseInt(json['rodada']),
+      timeMandanteId:
+          parseInt(json['time_mandante_id'] ?? timeMandante?['id']),
+      timeVisitanteId:
+          parseInt(json['time_visitante_id'] ?? timeVisitante?['id']),
       data: json['data'] != null ? DateTime.parse(json['data'] as String) : null,
       horario: json['horario'] as String?,
       local: json['local'] as String?,
-      status: parseStatus(json['status'] as String),
-      nomeMandante: json['nome_mandante'] as String?,
-      nomeVisitante: json['nome_visitante'] as String?,
-      escudoMandante: json['escudo_mandante'] as String?,
-      escudoVisitante: json['escudo_visitante'] as String?,
-      golsMandante: json['gols_mandante'] as int?,
-      golsVisitante: json['gols_visitante'] as int?,
+      status: parseStatus(json['status']),
+      nomeMandante:
+          (json['nome_mandante'] as String?) ?? (timeMandante?['nome'] as String?),
+      nomeVisitante:
+          (json['nome_visitante'] as String?) ?? (timeVisitante?['nome'] as String?),
+      escudoMandante: (json['escudo_mandante'] as String?) ??
+          (timeMandante?['escudo_url'] as String?),
+      escudoVisitante: (json['escudo_visitante'] as String?) ??
+          (timeVisitante?['escudo_url'] as String?),
+      golsMandante:
+          parseNullableInt(json['gols_mandante'] ?? json['placar_mandante']),
+      golsVisitante:
+          parseNullableInt(json['gols_visitante'] ?? json['placar_visitante']),
     );
   }
 

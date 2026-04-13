@@ -124,17 +124,19 @@ class _RegistrarResultadoScreenState extends State<RegistrarResultadoScreen> {
                 ),
                 const SizedBox(height: 12),
 
-                // Minuto — opcional, mas se informado deve ser 0-120
+                // Minuto — obrigatório e limitado a 0-120
                 TextFormField(
                   controller: minutoController,
                   keyboardType: TextInputType.number,
                   decoration: const InputDecoration(
-                    labelText: 'Minuto (opcional)',
+                    labelText: 'Minuto',
                     hintText: 'Ex: 45',
                   ),
                   onChanged: (v) => minuto = int.tryParse(v),
                   validator: (v) {
-                    if (v == null || v.isEmpty) return null; // campo opcional
+                    if (v == null || v.isEmpty) {
+                      return 'Informe o minuto do evento';
+                    }
                     final n = int.tryParse(v);
                     if (n == null || n < 0 || n > 120) {
                       return 'Informe um minuto entre 0 e 120';
@@ -155,7 +157,7 @@ class _RegistrarResultadoScreenState extends State<RegistrarResultadoScreen> {
                               'tipo': tipoSelecionado,
                               'jogador_id': jogadorIdSelecionado,
                               'time_id': timeIdSelecionado,
-                              'minuto': minuto,
+                                'minuto': minuto!,
                               '_display_jogador': context
                                   .read<JogadorProvider>()
                                   .jogadores

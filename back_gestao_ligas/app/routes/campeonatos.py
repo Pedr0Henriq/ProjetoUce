@@ -1,9 +1,7 @@
-import site
-
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime
-from app.models import Campeonato, Usuario
+from app.models import Campeonato, Time, Usuario
 from app import db
 
 campeonatos_bp = Blueprint('campeonatos', __name__)
@@ -161,8 +159,18 @@ def encerrar_campeonato(id):
     if not dados or 'campeao_time_id' not in dados:
         return jsonify({"erro": "O ID do time campeão é obrigatório."}), 400
 
+    if campeonato.status == 'ENCERRADO':
+        return jsonify({"erro": "Este campeonato já está encerrado."}), 400
+
+    campeao = Time.query.filter_by(
+        id=dados['campeao_time_id'],
+        campeonato_id=campeonato.id,
+    ).first()
+    if not campeao:
+        return jsonify({"erro": "O time campeão deve pertencer a este campeonato."}), 400
+
     campeonato.status = 'ENCERRADO'
-    campeonato.campeao_time_id = dados['campeao_time_id']
+    campeonato.campeao_time_id = campeao.id
     
     db.session.commit()
 

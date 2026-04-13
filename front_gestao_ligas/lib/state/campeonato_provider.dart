@@ -121,13 +121,13 @@ class CampeonatoProvider extends ChangeNotifier {
   }
 
   /// Encerrar campeonato (RF 14)
-  Future<bool> encerrar(int id) async {
+  Future<bool> encerrar(int id, int campeaoTimeId) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      await _repo.encerrar(id);
+      await _repo.encerrar(id, campeaoTimeId);
       await buscarPorId(id);
       return true;
     } catch (e) {

@@ -95,16 +95,50 @@ class _CampeonatoPainelScreenState extends State<CampeonatoPainelScreen>
                     }
                     break;
                   case 'encerrar':
+                    final classificacao =
+                        context.read<ClassificacaoProvider>().classificacao;
+                    if (classificacao.isEmpty) {
+                      if (context.mounted) {
+                        DialogHelper.showError(
+                          context,
+                          'Não é possível encerrar sem classificação disponível.',
+                        );
+                      }
+                      break;
+                    }
+
+                    final lider = classificacao.first;
+                    if (lider.timeId <= 0) {
+                      if (context.mounted) {
+                        DialogHelper.showError(
+                          context,
+                          'Não foi possível identificar o campeão pela classificação.',
+                        );
+                      }
+                      break;
+                    }
+
+                    final nomeCampeao =
+                        lider.nomeTime ?? 'Time #${lider.timeId}';
                     final confirm = await DialogHelper.showConfirmation(
                       context,
                       title: 'Encerrar Campeonato',
                       message:
-                          'Deseja encerrar este campeonato? Não será possível registrar novos resultados.',
+                          'Deseja encerrar este campeonato?\n\nCampeão definido: $nomeCampeao\n\nNão será possível registrar novos resultados.',
                       confirmText: 'Encerrar',
                       isDangerous: true,
                     );
                     if (confirm && context.mounted) {
-                      await campProvider.encerrar(widget.campeonatoId);
+                      final success = await campProvider.encerrar(
+                        widget.campeonatoId,
+                        lider.timeId,
+                      );
+                      if (success && context.mounted) {
+                        DialogHelper.showSuccess(
+                          context,
+                          'Campeonato encerrado com sucesso.',
+                        );
+                      }
                     }
                     break;
                   case 'excluir':

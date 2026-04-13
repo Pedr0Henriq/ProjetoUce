@@ -12,7 +12,12 @@ jwt = JWTManager()
 
 def create_app():
     app = Flask(__name__)
-    CORS(app)
+    cors_origins = os.environ.get('CORS_ORIGINS', '*')
+    if cors_origins.strip() == '*':
+        CORS(app)
+    else:
+        origins = [o.strip() for o in cors_origins.split(',') if o.strip()]
+        CORS(app, origins=origins, supports_credentials=True)
 
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev')
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('SQLALCHEMY_DATABASE_URI', 'sqlite:///gestao_ligas.db')

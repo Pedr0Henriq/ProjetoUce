@@ -24,7 +24,13 @@ class EventoPartida {
   });
 
   factory EventoPartida.fromJson(Map<String, dynamic> json) {
-    TipoEvento parseTipo(String s) {
+    int parseInt(dynamic value, {int fallback = 0}) {
+      if (value is int) return value;
+      return int.tryParse(value?.toString() ?? '') ?? fallback;
+    }
+
+    TipoEvento parseTipo(dynamic tipoValue) {
+      final s = (tipoValue ?? '').toString().toLowerCase();
       switch (s) {
         case 'gol':
           return TipoEvento.gol;
@@ -39,15 +45,19 @@ class EventoPartida {
       }
     }
 
+    final jogadorMap = json['jogador'] as Map<String, dynamic>?;
+    final timeMap = json['time'] as Map<String, dynamic>?;
+
     return EventoPartida(
-      id: json['id'] as int,
-      partidaId: json['partida_id'] as int,
-      tipo: parseTipo(json['tipo'] as String),
+      id: parseInt(json['id']),
+      partidaId: parseInt(json['partida_id']),
+      tipo: parseTipo(json['tipo']),
       minuto: json['minuto'] as int?,
-      jogadorId: json['jogador_id'] as int,
-      timeId: json['time_id'] as int,
-      nomeJogador: json['nome_jogador'] as String?,
-      nomeTime: json['nome_time'] as String?,
+      jogadorId: parseInt(json['jogador_id'] ?? jogadorMap?['id']),
+      timeId: parseInt(json['time_id'] ?? timeMap?['id']),
+      nomeJogador:
+          (json['nome_jogador'] as String?) ?? (jogadorMap?['nome'] as String?),
+      nomeTime: (json['nome_time'] as String?) ?? (timeMap?['nome'] as String?),
     );
   }
 
