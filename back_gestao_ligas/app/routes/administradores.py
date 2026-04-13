@@ -32,7 +32,7 @@ def is_campeonato_admin(usuario_id, campeonato):
 def listar_administradores(campeonato_id):
     """RF17 — Lista os co-administradores vinculados a um campeonato.
 
-    Requer autenticação. Apenas administradores globais podem acessar.
+    Requer autenticação. Apenas administradores do campeonato podem acessar.
 
     Returns:
         200: Lista de objetos ``{"id", "nome", "email"}``.
@@ -63,7 +63,7 @@ def adicionar_administrador(campeonato_id):
     Returns:
         201: Administrador vinculado com sucesso (retorna o objeto do usuário).
         400: Parâmetro ausente ou usuário já é admin deste campeonato.
-        403: Requisitante sem permissão de administrador.
+        403: Requisitante sem permissão de administrador do campeonato.
         404: Campeonato ou usuário com o e-mail fornecido não encontrado.
     """
     campeonato = Campeonato.query.get_or_404(campeonato_id)
@@ -105,7 +105,7 @@ def remover_administrador(campeonato_id, usuario_id):
     Returns:
         200: Vínculo removido com sucesso.
         400: Tentativa de auto-remoção.
-        403: Requisitante sem permissão de administrador.
+        403: Requisitante sem permissão de administrador do campeonato.
         404: Campeonato, usuário ou vínculo não encontrado.
     """
     campeonato = Campeonato.query.get_or_404(campeonato_id)
