@@ -6,7 +6,9 @@ class Validators {
     if (value == null || value.trim().isEmpty) {
       return 'E-mail é obrigatório';
     }
-    final regex = RegExp(r'^[\w\-.]+@([\w\-]+\.)+[\w\-]{2,4}$');
+    final regex = RegExp(
+      r"^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+$",
+    );
     if (!regex.hasMatch(value.trim())) {
       return 'Formato de e-mail inválido';
     }

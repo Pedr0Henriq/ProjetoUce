@@ -12,14 +12,22 @@ class CampeonatoRepository {
 
   CampeonatoRepository({required this.dao, required this.api});
 
+  Future<void> _upsertCampeonato(db.CampeonatosCompanion companion) async {
+    final updated = await dao.atualizarCampeonato(companion);
+    if (!updated) {
+      await dao.criarCampeonato(companion);
+    }
+  }
+
   domain.Campeonato _mapCampeonatoToDomain(db.Campeonato data) {
+    final tipo = data.tipo.toLowerCase();
     return domain.Campeonato(
       id: data.id,
       nome: data.nome,
       modalidade: data.modalidade,
-      tipo: data.tipo == 'ponto_corrido' 
-          ? TipoCampeonato.pontoCorrido 
-          : TipoCampeonato.eliminatoria,
+      tipo: (tipo == 'ponto_corrido' || tipo == 'pontos_corridos')
+          ? domain.TipoCampeonato.pontoCorrido 
+          : domain.TipoCampeonato.eliminatoria,
       numEquipes: data.numEquipes,
       dataInicio: data.dataInicio,
       status: StatusCampeonato.to(data.status),
@@ -49,7 +57,7 @@ class CampeonatoRepository {
       id: Value(campeonato.id),
       nome: Value(campeonato.nome),
       modalidade: Value(campeonato.modalidade),
-      tipo: Value(campeonato.tipo == domain.TipoCampeonato.pontoCorrido ? 'ponto_corrido' : 'eliminatoria'),
+      tipo: Value(campeonato.tipo == domain.TipoCampeonato.pontoCorrido ? 'PONTOS_CORRIDOS' : 'ELIMINATORIA'),
       numEquipes: Value(campeonato.numEquipes),
       dataInicio: Value(campeonato.dataInicio),
       status: Value(StatusCampeonato.of(campeonato.status)),
@@ -64,7 +72,7 @@ class CampeonatoRepository {
       final list = response as List;
       final campeonatosApi = list.map((e) => domain.Campeonato.fromJson(e)).toList();
       for (var camp in campeonatosApi) {
-        await dao.atualizarCampeonato(_domainToCompanion(camp)); 
+        await _upsertCampeonato(_domainToCompanion(camp));
       }
 
       return campeonatosApi;
@@ -79,7 +87,7 @@ class CampeonatoRepository {
       final response = await api.get('/campeonatos/$id');
       final campeonatoApi = domain.Campeonato.fromJson(response as Map<String, dynamic>);
       
-      await dao.atualizarCampeonato(_domainToCompanion(campeonatoApi));
+      await _upsertCampeonato(_domainToCompanion(campeonatoApi));
       return campeonatoApi;
     } catch (e) {
       final dadoDrift = await dao.obterCampeonatoPorId(id);
@@ -94,7 +102,7 @@ class CampeonatoRepository {
     final response = await api.post('/campeonatos', dados);
     final novoCampeonato = domain.Campeonato.fromJson(response as Map<String, dynamic>);
     
-    await dao.criarCampeonato(_domainToCompanion(novoCampeonato));
+    await _upsertCampeonato(_domainToCompanion(novoCampeonato));
     
     return novoCampeonato;
   }
@@ -103,7 +111,7 @@ class CampeonatoRepository {
     final response = await api.put('/campeonatos/$id', dados);
     final campeonatoAtualizado = domain.Campeonato.fromJson(response as Map<String, dynamic>);
     
-    await dao.atualizarCampeonato(_domainToCompanion(campeonatoAtualizado));
+    await _upsertCampeonato(_domainToCompanion(campeonatoAtualizado));
     return campeonatoAtualizado;
   }
 
@@ -112,8 +120,8 @@ class CampeonatoRepository {
     await dao.deletarCampeonato(id);
   }
 
-  Future<void> encerrar(int id) async {
-    await api.post('/campeonatos/$id/encerrar', {});
+  Future<void> encerrar(int id, int campeaoTimeId) async {
+    await api.post('/campeonatos/$id/encerrar', {'campeao_time_id': campeaoTimeId});
     
     final campLocal = await dao.obterCampeonatoPorId(id);
     if (campLocal != null) {

@@ -1,50 +1,104 @@
 import 'package:go_router/go_router.dart';
 import '../../state/auth_provider.dart';
+import '../../screens/splash_screen.dart';
 import '../../screens/auth/login_screen.dart';
+import '../../screens/auth/cadastro_screen.dart';
 import '../../screens/auth/recuperar_senha_screen.dart';
+import '../../screens/perfil/perfil_screen.dart';
 import '../../screens/campeonatos/campeonatos_screen.dart';
 import '../../screens/campeonatos/criar_campeonato_screen.dart';
 import '../../screens/campeonato/campeonato_painel_screen.dart';
 import '../../screens/campeonato/editar_campeonato_screen.dart';
+import '../../screens/campeonato/administradores_screen.dart';
 import '../../screens/partidas/registrar_resultado_screen.dart';
 import '../../screens/partidas/sumula_screen.dart';
 import '../../screens/campeonato/widgets/time_ficha_screen.dart';
 import '../../screens/campeonato/widgets/criar_time_screen.dart';
 import '../../screens/campeonato/widgets/jogador_form_screen.dart';
+import '../../screens/admin/usuarios_admin_screen.dart';
 
-/// Configuração de rotas da aplicação com GoRouter
+/// Configuração de rotas da aplicação com GoRouter.
+///
+/// Rotas públicas (sem autenticação): /splash, /login, /register, /recuperar-senha
+/// Rotas protegidas: todas as demais — redirecionam para /login se não autenticado.
 class AppRouter {
   final AuthProvider authProvider;
 
   AppRouter(this.authProvider);
 
   late final GoRouter router = GoRouter(
-    initialLocation: '/login',
+    // Inicia no splash que exibe animação e navega automaticamente
+    initialLocation: '/splash',
     refreshListenable: authProvider,
     redirect: (context, state) {
       final isAuthenticated = authProvider.isAuthenticated;
-      final isLoginRoute = state.matchedLocation == '/login' ||
-          state.matchedLocation == '/recuperar-senha';
+      final loc = state.matchedLocation;
 
-      if (!isAuthenticated && !isLoginRoute) {
+      // Rotas públicas que não requerem autenticação
+      final isPublicRoute = loc == '/login' ||
+          loc == '/register' ||
+          loc == '/recuperar-senha' ||
+          loc == '/splash';
+
+      // Rotas que exigem perfil administrador.
+      final isAdminOnlyRoute =
+          loc == '/admin/usuarios' ||
+          loc == '/campeonatos/criar' ||
+          RegExp(r'^/campeonato/\d+/editar$').hasMatch(loc) ||
+          RegExp(r'^/campeonato/\d+/administradores$').hasMatch(loc) ||
+          RegExp(r'^/campeonato/\d+/criar-time$').hasMatch(loc) ||
+          RegExp(r'^/campeonato/\d+/time/\d+/jogador$').hasMatch(loc) ||
+          RegExp(r'^/campeonato/\d+/partida/\d+/resultado$').hasMatch(loc);
+
+      if (!isAuthenticated && !isPublicRoute) {
         return '/login';
       }
-      if (isAuthenticated && isLoginRoute) {
+      // Usuário autenticado tentando acessar login → redireciona para início
+      if (isAuthenticated &&
+          (loc == '/login' || loc == '/register' || loc == '/recuperar-senha')) {
+        return '/campeonatos';
+      }
+      // Visualizador tentando acessar rota de escrita/configuração.
+      if (isAuthenticated && !authProvider.isAdmin && isAdminOnlyRoute) {
         return '/campeonatos';
       }
       return null;
     },
     routes: [
-      // Auth
+      // Splash (público)
+      GoRoute(
+        path: '/splash',
+        name: 'splash',
+        builder: (context, state) => const SplashScreen(),
+      ),
+
+      // Auth (público)
       GoRoute(
         path: '/login',
         name: 'login',
         builder: (context, state) => const LoginScreen(),
       ),
       GoRoute(
+        path: '/register',
+        name: 'register',
+        builder: (context, state) => const CadastroScreen(),
+      ),
+      GoRoute(
         path: '/recuperar-senha',
         name: 'recuperar-senha',
         builder: (context, state) => const RecuperarSenhaScreen(),
+      ),
+
+      // Perfil (RF 12)
+      GoRoute(
+        path: '/perfil',
+        name: 'perfil',
+        builder: (context, state) => const PerfilScreen(),
+      ),
+      GoRoute(
+        path: '/admin/usuarios',
+        name: 'admin-usuarios',
+        builder: (context, state) => const UsuariosAdminScreen(),
       ),
 
       // Campeonatos
@@ -76,6 +130,15 @@ class AppRouter {
             builder: (context, state) {
               final id = int.parse(state.pathParameters['id']!);
               return EditarCampeonatoScreen(campeonatoId: id);
+            },
+          ),
+          // Administradores adicionais (RF 17)
+          GoRoute(
+            path: 'administradores',
+            name: 'administradores-campeonato',
+            builder: (context, state) {
+              final id = int.parse(state.pathParameters['id']!);
+              return AdministradoresScreen(campeonatoId: id);
             },
           ),
           GoRoute(

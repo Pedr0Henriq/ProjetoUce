@@ -120,7 +120,9 @@ class ApiClient {
       return body;
     }
 
-    final message = body is Map ? body['message'] ?? body['error'] : null;
+    final message = body is Map
+      ? body['message'] ?? body['error'] ?? body['erro']
+      : null;
 
     switch (response.statusCode) {
       case 401:

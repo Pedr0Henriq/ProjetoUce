@@ -11,6 +11,11 @@ class ClassificacaoRepository {
 
   ClassificacaoRepository({required this.api, required this.dao});
 
+  int _parseInt(dynamic value, {int fallback = 0}) {
+    if (value is int) return value;
+    return int.tryParse(value?.toString() ?? '') ?? fallback;
+  }
+
 
   domain.Classificacao _mapClassificacaoToDomain(ClassificacaoComDetalhes detalhe) {
     return domain.Classificacao(
@@ -44,18 +49,51 @@ class ClassificacaoRepository {
     );
   }
 
+  domain.Classificacao _mapApiLineToDomain(
+    Map<String, dynamic> json,
+    int campeonatoId,
+  ) {
+    final time = json['time'] as Map<String, dynamic>?;
+    final timeId = _parseInt(json['time_id'] ?? time?['id']);
+    final syntheticId = _parseInt(
+      json['id'],
+      fallback: campeonatoId * 100000 + timeId,
+    );
+
+    return domain.Classificacao(
+      id: syntheticId,
+      campeonatoId: _parseInt(json['campeonato_id'], fallback: campeonatoId),
+      timeId: timeId,
+      pontos: _parseInt(json['pontos']),
+      jogos: _parseInt(json['jogos']),
+      vitorias: _parseInt(json['vitorias']),
+      empates: _parseInt(json['empates']),
+      derrotas: _parseInt(json['derrotas']),
+      golsPro: _parseInt(json['gols_pro']),
+      golsContra: _parseInt(json['gols_contra']),
+      nomeTime: (json['nome_time'] as String?) ?? (time?['nome'] as String?),
+      escudoUrl:
+          (json['escudo_url'] as String?) ?? (time?['escudo_url'] as String?),
+    );
+  }
+
   Future<List<domain.Classificacao>> buscarPorCampeonato(int campeonatoId) async {
     try {
       final response = await api.get('/campeonatos/$campeonatoId/classificacao');
       final list = response as List;
-      final classificacaoApi = list.map((e) => domain.Classificacao.fromJson(e)).toList();
+      final classificacaoApi = list
+          .map((e) => _mapApiLineToDomain(e as Map<String, dynamic>, campeonatoId))
+          .toList();
 
       for (var linha in classificacaoApi) {
-        await dao.atualizarClassificacao(_domainToCompanion(linha));
+        final companion = _domainToCompanion(linha);
+        final updated = await dao.atualizarClassificacao(companion);
+        if (!updated) {
+          await dao.inserirClassificacao(companion);
+        }
       }
 
-      final dadosDrift = await dao.obterClassificacao(campeonatoId);
-      return dadosDrift.map(_mapClassificacaoToDomain).toList();
+      return classificacaoApi;
 
     } catch (e) {
       final dadosDrift = await dao.obterClassificacao(campeonatoId);

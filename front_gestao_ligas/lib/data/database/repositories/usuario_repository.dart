@@ -1,5 +1,4 @@
 import 'package:drift/drift.dart';
-import 'package:flutter/material.dart';
 import 'package:front_gestao_ligas/data/api_client.dart';
 import 'package:front_gestao_ligas/data/database/daos/usuario_dao.dart';
 import 'package:front_gestao_ligas/data/database/database.dart' as db;
@@ -13,11 +12,12 @@ class UsuarioRepository {
   UsuarioRepository({required this.dao, required this.api});
 
   domain.Usuario _mapUsuarioToDomain(db.Usuario data) {
+    final perfilRaw = data.perfil.toUpperCase();
     return domain.Usuario(
       id: data.id,
       nome: data.nome,
       email: data.email,
-      perfil: data.perfil == 'administrador'
+      perfil: perfilRaw == 'ADMIN' || perfilRaw == 'ADMINISTRADOR'
           ? domain.PerfilUsuario.administrador
           : domain.PerfilUsuario.analista,
       criadoEm: data.criadoEm,
@@ -52,6 +52,20 @@ class UsuarioRepository {
     }
 
     return data;
+  }
+
+  Future<void> register({
+    required String nome,
+    required String email,
+    required String senha,
+  }) async {
+    await api.post('/auth/register', {
+      'nome': nome.trim(),
+      'email': email.trim().toLowerCase(),
+      'senha': senha,
+      // Cadastro público sempre visualizador.
+      'perfil': 'VIEWER',
+    });
   }
 
   Future<void> logout() async {
@@ -106,10 +120,74 @@ class UsuarioRepository {
       nome: usuario.nome,
       email: usuario.email,
       perfil: usuario.perfil == domain.PerfilUsuario.administrador
-          ? 'administrador'
-          : 'analista',
+          ? 'ADMIN'
+          : 'VIEWER',
       criadoEm: usuario.criadoEm,
     );
     await dao.criarUsuario(companion);
+  }
+
+  // ── Gestão administrativa de usuários ────────────────────────────────────
+
+  Future<List<domain.Usuario>> listarUsuariosAdmin() async {
+    final response = await api.get('/usuarios');
+    final list = response as List;
+    return list
+        .map((e) => domain.Usuario.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<domain.Usuario> promoverUsuario(int usuarioId) async {
+    final response = await api.post('/usuarios/$usuarioId/promover', {});
+    final data = response as Map<String, dynamic>;
+    return domain.Usuario.fromJson(data['usuario'] as Map<String, dynamic>);
+  }
+
+  Future<domain.Usuario> desativarUsuario(int usuarioId) async {
+    final response = await api.post('/usuarios/$usuarioId/desativar', {});
+    final data = response as Map<String, dynamic>;
+    return domain.Usuario.fromJson(data['usuario'] as Map<String, dynamic>);
+  }
+
+  Future<domain.Usuario> reativarUsuario(int usuarioId) async {
+    final response = await api.post('/usuarios/$usuarioId/reativar', {});
+    final data = response as Map<String, dynamic>;
+    return domain.Usuario.fromJson(data['usuario'] as Map<String, dynamic>);
+  }
+
+  // ── RF 17 — Administradores Adicionais ────────────────────────────────────
+
+  /// RF 17 — Retorna todos os co-administradores de um campeonato.
+  ///
+  /// Endpoint: GET /campeonatos/:id/administradores
+  Future<List<domain.Usuario>> listarAdministradoresCampeonato(
+      int campeonatoId) async {
+    final response = await api.get('/campeonatos/$campeonatoId/administradores');
+    final list = response as List;
+    return list
+        .map((e) => domain.Usuario.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// RF 17 — Adiciona um usuário como co-administrador de um campeonato.
+  ///
+  /// Endpoint: POST /campeonatos/:id/administradores
+  /// Body: `{ "email": "..." }`
+  Future<void> adicionarAdministrador(
+      int campeonatoId, String email) async {
+    await api.post(
+      '/campeonatos/$campeonatoId/administradores',
+      {'email': email},
+    );
+  }
+
+  /// RF 17 — Remove um co-administrador de um campeonato.
+  ///
+  /// Endpoint: DELETE /campeonatos/:id/administradores/:usuarioId
+  Future<void> removerAdministrador(
+      int campeonatoId, int usuarioId) async {
+    await api.delete(
+      '/campeonatos/$campeonatoId/administradores/$usuarioId',
+    );
   }
 }

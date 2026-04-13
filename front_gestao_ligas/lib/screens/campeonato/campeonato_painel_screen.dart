@@ -70,6 +70,10 @@ class _CampeonatoPainelScreenState extends State<CampeonatoPainelScreen>
                   case 'editar':
                     context.push('/campeonato/${widget.campeonatoId}/editar');
                     break;
+                  case 'administradores':
+                    context.push(
+                        '/campeonato/${widget.campeonatoId}/administradores');
+                    break;
                   case 'gerar_calendario':
                     final confirm = await DialogHelper.showConfirmation(
                       context,
@@ -86,21 +90,62 @@ class _CampeonatoPainelScreenState extends State<CampeonatoPainelScreen>
                         if (success) {
                           DialogHelper.showSuccess(
                               context, 'Calendário gerado com sucesso!');
+                        } else {
+                          final erro = context.read<PartidaProvider>().error;
+                          if (erro != null) {
+                            DialogHelper.showError(context, erro);
+                          } else {
+                            DialogHelper.showError(context, 'Falha ao gerar o calendário.');
+                          }
                         }
                       }
                     }
                     break;
                   case 'encerrar':
+                    final classificacao =
+                        context.read<ClassificacaoProvider>().classificacao;
+                    if (classificacao.isEmpty) {
+                      if (context.mounted) {
+                        DialogHelper.showError(
+                          context,
+                          'Não é possível encerrar sem classificação disponível.',
+                        );
+                      }
+                      break;
+                    }
+
+                    final lider = classificacao.first;
+                    if (lider.timeId <= 0) {
+                      if (context.mounted) {
+                        DialogHelper.showError(
+                          context,
+                          'Não foi possível identificar o campeão pela classificação.',
+                        );
+                      }
+                      break;
+                    }
+
+                    final nomeCampeao =
+                        lider.nomeTime ?? 'Time #${lider.timeId}';
                     final confirm = await DialogHelper.showConfirmation(
                       context,
                       title: 'Encerrar Campeonato',
                       message:
-                          'Deseja encerrar este campeonato? Não será possível registrar novos resultados.',
+                          'Deseja encerrar este campeonato?\n\nCampeão definido: $nomeCampeao\n\nNão será possível registrar novos resultados.',
                       confirmText: 'Encerrar',
                       isDangerous: true,
                     );
                     if (confirm && context.mounted) {
-                      await campProvider.encerrar(widget.campeonatoId);
+                      final success = await campProvider.encerrar(
+                        widget.campeonatoId,
+                        lider.timeId,
+                      );
+                      if (success && context.mounted) {
+                        DialogHelper.showSuccess(
+                          context,
+                          'Campeonato encerrado com sucesso.',
+                        );
+                      }
                     }
                     break;
                   case 'excluir':
@@ -136,6 +181,15 @@ class _CampeonatoPainelScreenState extends State<CampeonatoPainelScreen>
                   child: ListTile(
                     leading: Icon(Icons.calendar_month),
                     title: Text('Gerar Calendário'),
+                    dense: true,
+                  ),
+                ),
+                // RF 17 — Gerenciar co-administradores
+                const PopupMenuItem(
+                  value: 'administradores',
+                  child: ListTile(
+                    leading: Icon(Icons.admin_panel_settings_outlined),
+                    title: Text('Administradores'),
                     dense: true,
                   ),
                 ),

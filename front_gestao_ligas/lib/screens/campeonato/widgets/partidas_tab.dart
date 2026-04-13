@@ -100,17 +100,19 @@ class _PartidaCard extends StatelessWidget {
           padding: const EdgeInsets.all(12),
           child: Column(
             children: [
-              // Data e local
+              // Data, local e status
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    '${DateFormatters.data(partida.data)} • ${DateFormatters.hora(partida.horario)}',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.grey.shade600,
-                        ),
+                  Expanded(
+                    child: Text(
+                      '${DateFormatters.data(partida.data)} • ${DateFormatters.hora(partida.horario)}',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Colors.grey.shade600,
+                          ),
+                    ),
                   ),
-                  if (partida.local != null)
+                  if (partida.local != null) ...[
+                    const SizedBox(width: 4),
                     Flexible(
                       child: Text(
                         partida.local!,
@@ -120,6 +122,9 @@ class _PartidaCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
+                  ],
+                  const SizedBox(width: 8),
+                  _StatusPartidaChip(isFinalizada: partida.isFinalizada),
                 ],
               ),
               const SizedBox(height: 12),
@@ -215,20 +220,20 @@ class _PartidaCard extends StatelessWidget {
                 ),
               ],
 
-              // Indicador visual para partidas finalizadas
+              // Indicador de ação para partidas finalizadas
               if (partida.isFinalizada)
                 Padding(
                   padding: const EdgeInsets.only(top: 4),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.check_circle,
-                          size: 14, color: AppTheme.statusEmAndamento),
+                      Icon(Icons.receipt_long,
+                          size: 14, color: Colors.grey.shade400),
                       const SizedBox(width: 4),
                       Text(
-                        'Finalizada • Toque para ver a súmula',
+                        'Toque para ver a súmula',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Colors.grey.shade500,
+                              color: Colors.grey.shade400,
                               fontSize: 11,
                             ),
                       ),
@@ -238,6 +243,44 @@ class _PartidaCard extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Chip compacto indicando o status de uma partida (Agendada / Finalizada).
+class _StatusPartidaChip extends StatelessWidget {
+  final bool isFinalizada;
+
+  const _StatusPartidaChip({required this.isFinalizada});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = isFinalizada ? AppTheme.golColor : AppTheme.statusEmAndamento;
+    final label = isFinalizada ? 'Finalizada' : 'Agendada';
+    final icon = isFinalizada ? Icons.check_circle : Icons.schedule;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 11, color: color),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+        ],
       ),
     );
   }

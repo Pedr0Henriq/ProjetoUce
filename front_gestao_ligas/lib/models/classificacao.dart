@@ -32,19 +32,28 @@ class Classificacao {
   int get saldoGols => golsPro - golsContra;
 
   factory Classificacao.fromJson(Map<String, dynamic> json) {
+    int parseInt(dynamic value, {int fallback = 0}) {
+      if (value is int) return value;
+      return int.tryParse(value?.toString() ?? '') ?? fallback;
+    }
+
+    final time = json['time'] as Map<String, dynamic>?;
+    final timeId = parseInt(json['time_id'] ?? time?['id']);
+
     return Classificacao(
-      id: json['id'] as int,
-      campeonatoId: json['campeonato_id'] as int,
-      timeId: json['time_id'] as int,
-      pontos: json['pontos'] as int,
-      jogos: json['jogos'] as int,
-      vitorias: json['vitorias'] as int,
-      empates: json['empates'] as int,
-      derrotas: json['derrotas'] as int,
-      golsPro: json['gols_pro'] as int,
-      golsContra: json['gols_contra'] as int,
-      nomeTime: json['nome_time'] as String?,
-      escudoUrl: json['escudo_url'] as String?,
+      id: parseInt(json['id'], fallback: timeId),
+      campeonatoId: parseInt(json['campeonato_id']),
+      timeId: timeId,
+      pontos: parseInt(json['pontos']),
+      jogos: parseInt(json['jogos']),
+      vitorias: parseInt(json['vitorias']),
+      empates: parseInt(json['empates']),
+      derrotas: parseInt(json['derrotas']),
+      golsPro: parseInt(json['gols_pro']),
+      golsContra: parseInt(json['gols_contra']),
+      nomeTime: (json['nome_time'] as String?) ?? (time?['nome'] as String?),
+      escudoUrl:
+          (json['escudo_url'] as String?) ?? (time?['escudo_url'] as String?),
     );
   }
 

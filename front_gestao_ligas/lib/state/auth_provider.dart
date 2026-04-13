@@ -60,6 +60,25 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  /// Cadastro público (RF 01)
+  Future<bool> register(String nome, String email, String senha) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      await _repo.register(nome: nome, email: email, senha: senha);
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
   /// Logout (RF 11)
   Future<void> logout() async {
     await _repo.logout();
@@ -110,5 +129,38 @@ class AuthProvider extends ChangeNotifier {
   void clearError() {
     _error = null;
     notifyListeners();
+  }
+
+  // ── RF 17 — Administradores Adicionais ────────────────────────────────────
+
+  /// RF 17 — Retorna a lista de co-administradores de um campeonato.
+  ///
+  /// Lança [ApiException] se o endpoint não estiver disponível no backend.
+  Future<List<Usuario>> listarAdministradoresCampeonato(int campeonatoId) async {
+    return _repo.listarAdministradoresCampeonato(campeonatoId);
+  }
+
+  /// RF 17 — Adiciona um usuário como co-administrador via e-mail.
+  ///
+  /// Retorna `true` em caso de sucesso ou `false` em caso de erro.
+  Future<bool> adicionarAdministrador(int campeonatoId, String email) async {
+    try {
+      await _repo.adicionarAdministrador(campeonatoId, email);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// RF 17 — Remove um co-administrador do campeonato.
+  ///
+  /// Retorna `true` em caso de sucesso ou `false` em caso de erro.
+  Future<bool> removerAdministrador(int campeonatoId, int usuarioId) async {
+    try {
+      await _repo.removerAdministrador(campeonatoId, usuarioId);
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 }

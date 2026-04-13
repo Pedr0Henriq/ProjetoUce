@@ -20,10 +20,7 @@ class ArtilhariaTab extends StatelessWidget {
     if (provider.error != null) {
       return ErrorState(
         message: provider.error!,
-        onRetry: () {
-          provider.buscarArtilharia(campeonatoId);
-          provider.buscarAssistencias(campeonatoId);
-        },
+        onRetry: () => provider.carregarArtilhariaEAssistencias(campeonatoId),
       );
     }
 
@@ -73,7 +70,13 @@ class ArtilhariaTab extends StatelessWidget {
     IconData emptyIcon,
     String campo,
   ) {
-    if (dados.isEmpty) {
+    // Filtrar itens com ao menos 1 ocorrência do campo para não exibir
+    // jogadores sem gols na aba de artilheiros (e vice-versa).
+    final filtrados = dados
+        .where((item) => ((item[campo] as num?) ?? 0) > 0)
+        .toList();
+
+    if (filtrados.isEmpty) {
       return EmptyState(
         icon: emptyIcon,
         title: emptyMessage,
@@ -82,11 +85,17 @@ class ArtilhariaTab extends StatelessWidget {
 
     return ListView.separated(
       padding: const EdgeInsets.all(16),
-      itemCount: dados.length,
+      itemCount: filtrados.length,
       separatorBuilder: (_, _) => const Divider(height: 1),
       itemBuilder: (context, index) {
-        final item = dados[index];
+        final item = filtrados[index];
         final posicao = index + 1;
+
+        // A API retorna estrutura aninhada: {"jogador": {"nome":..., "time":...}, ...}
+        final jogador = item['jogador'] as Map<String, dynamic>? ?? {};
+        final time = jogador['time'] as Map<String, dynamic>? ?? {};
+        final nomeJogador = jogador['nome']?.toString() ?? 'Jogador';
+        final nomeTime = time['nome']?.toString() ?? '';
 
         return ListTile(
           leading: CircleAvatar(
@@ -104,10 +113,10 @@ class ArtilhariaTab extends StatelessWidget {
             ),
           ),
           title: Text(
-            item['nome_jogador']?.toString() ?? 'Jogador',
+            nomeJogador,
             style: const TextStyle(fontWeight: FontWeight.w600),
           ),
-          subtitle: Text(item['nome_time']?.toString() ?? ''),
+          subtitle: Text(nomeTime),
           trailing: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(

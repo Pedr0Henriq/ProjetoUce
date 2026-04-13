@@ -3,12 +3,19 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime, timedelta
 import random
 
-from app.models import Partida, Campeonato, Time, Usuario, EventoPartida
+from app.models import Partida, Campeonato, Time, Usuario, EventoPartida, Jogador
 from app import db
 
 partidas_bp = Blueprint('partidas', __name__)
 
 from app.routes.administradores import is_campeonato_admin
+
+_EVENTOS_VALIDOS = {
+    'GOL',
+    'ASSISTENCIA',
+    'CARTAO_AMARELO',
+    'CARTAO_VERMELHO',
+}
 
 @partidas_bp.route('/campeonatos/<int:campeonato_id>/gerar-calendario', methods=['POST'])
 @jwt_required()
@@ -18,6 +25,10 @@ def gerar_calendario(campeonato_id):
     usuario_id = get_jwt_identity()
     if not is_campeonato_admin(usuario_id, campeonato):
         return jsonify({"erro": "Acesso negado."}), 403
+
+    if campeonato.status == 'ENCERRADO':
+        return jsonify({"erro": "Não é possível gerar calendário para campeonato encerrado."}), 400
+
     dados = request.get_json()
 
     if not dados or 'tipo_geracao' not in dados or 'data_primeira_rodada' not in dados:
@@ -139,6 +150,10 @@ def criar_partida(campeonato_id):
     usuario_id = get_jwt_identity()
     if not is_campeonato_admin(usuario_id, campeonato):
         return jsonify({"erro": "Acesso negado."}), 403
+
+    if campeonato.status == 'ENCERRADO':
+        return jsonify({"erro": "Não é possível cadastrar partidas em campeonato encerrado."}), 400
+
     dados = request.get_json()
     
     obrigatorios = ['rodada', 'time_mandante_id', 'time_visitante_id']
@@ -175,6 +190,9 @@ def atualizar_partida(id):
     usuario_id = get_jwt_identity()
     if not is_campeonato_admin(usuario_id, partida.campeonato_rel):
         return jsonify({"erro": "Acesso negado."}), 403
+
+    if partida.campeonato_rel.status == 'ENCERRADO':
+        return jsonify({"erro": "Não é possível alterar partidas de campeonato encerrado."}), 400
     
     if partida.status == 'FINALIZADA':
         return jsonify({"erro": "Não é permitido alterar uma partida FINALIZADA."}), 400
@@ -207,6 +225,9 @@ def deletar_partida(id):
     usuario_id = get_jwt_identity()
     if not is_campeonato_admin(usuario_id, partida.campeonato_rel):
         return jsonify({"erro": "Acesso negado."}), 403
+
+    if partida.campeonato_rel.status == 'ENCERRADO':
+        return jsonify({"erro": "Não é possível remover partidas de campeonato encerrado."}), 400
     
     if partida.status == 'FINALIZADA':
         return jsonify({"erro": "Não é permitido apagar uma partida FINALIZADA."}), 400
@@ -223,6 +244,9 @@ def salvar_resultado(id):
     usuario_id = get_jwt_identity()
     if not is_campeonato_admin(usuario_id, partida.campeonato_rel):
         return jsonify({"erro": "Acesso negado."}), 403
+
+    if partida.campeonato_rel.status == 'ENCERRADO':
+        return jsonify({"erro": "Não é possível registrar resultado em campeonato encerrado."}), 400
     
     if partida.status == 'FINALIZADA':
         return jsonify({"erro": "Esta partida já foi finalizada."}), 400
@@ -231,17 +255,63 @@ def salvar_resultado(id):
     if not dados or 'gols_mandante' not in dados or 'gols_visitante' not in dados:
         return jsonify({"erro": "Placares são obrigatórios (gols_mandante e gols_visitante)."}), 400
 
-    partida.placar_mandante = dados['gols_mandante']
-    partida.placar_visitante = dados['gols_visitante']
+    try:
+        gols_mandante = int(dados['gols_mandante'])
+        gols_visitante = int(dados['gols_visitante'])
+    except (TypeError, ValueError):
+        return jsonify({"erro": "Placares devem ser números inteiros."}), 400
+
+    if gols_mandante < 0 or gols_visitante < 0:
+        return jsonify({"erro": "Placares não podem ser negativos."}), 400
+
+    partida.placar_mandante = gols_mandante
+    partida.placar_visitante = gols_visitante
     partida.status = 'FINALIZADA'
+
+    time_mandante_id = partida.time_mandante_id
+    time_visitante_id = partida.time_visitante_id
+    times_participantes = {time_mandante_id, time_visitante_id}
 
     eventos_enviados = dados.get('eventos', [])
     for ev in eventos_enviados:
+        tipo_raw = str(ev.get('tipo', '')).strip().upper()
+        if tipo_raw not in _EVENTOS_VALIDOS:
+            return jsonify({"erro": "Tipo de evento inválido."}), 400
+
+        if 'minuto' not in ev or ev['minuto'] is None:
+            return jsonify({"erro": "Minuto é obrigatório para cada evento."}), 400
+        try:
+            minuto = int(ev['minuto'])
+        except (TypeError, ValueError):
+            return jsonify({"erro": "Minuto do evento deve ser um número inteiro."}), 400
+
+        if minuto < 0 or minuto > 120:
+            return jsonify({"erro": "Minuto do evento deve estar entre 0 e 120."}), 400
+
+        try:
+            jogador_id = int(ev.get('jogador_id'))
+            time_id = int(ev.get('time_id'))
+        except (TypeError, ValueError):
+            return jsonify({"erro": "jogador_id e time_id são obrigatórios e devem ser inteiros."}), 400
+
+        if time_id not in times_participantes:
+            return jsonify({"erro": "O evento deve estar vinculado a um dos times participantes."}), 400
+
+        jogador = Jogador.query.get(jogador_id)
+        if not jogador:
+            return jsonify({"erro": "Jogador do evento não encontrado."}), 404
+
+        if jogador.time_id not in times_participantes:
+            return jsonify({"erro": "Jogador do evento não pertence a nenhum time da partida."}), 400
+
+        if jogador.time_id != time_id:
+            return jsonify({"erro": "time_id do evento não corresponde ao time do jogador informado."}), 400
+
         novo_evento = EventoPartida(
-            tipo=ev['tipo'],
-            minuto=ev['minuto'],
-            jogador_id=ev['jogador_id'],
-            time_id=ev['time_id'],
+            tipo=tipo_raw,
+            minuto=minuto,
+            jogador_id=jogador_id,
+            time_id=time_id,
             partida_id=partida.id
         )
         db.session.add(novo_evento)
@@ -257,6 +327,28 @@ def salvar_resultado(id):
         "registrado_em": datetime.utcnow().isoformat() + "Z"
     }), 201
 
+
+@partidas_bp.route('/partidas/<int:id>/eventos', methods=['GET'])
+@jwt_required()
+def listar_eventos_partida(id):
+    """Retorna os eventos de uma partida em formato simples para compatibilidade."""
+    partida = Partida.query.get_or_404(id)
+
+    eventos = []
+    for ev in sorted(partida.eventos, key=lambda e: (e.minuto, e.id)):
+        eventos.append({
+            "id": ev.id,
+            "partida_id": partida.id,
+            "tipo": (ev.tipo or '').lower(),
+            "minuto": ev.minuto,
+            "jogador_id": ev.jogador_id,
+            "time_id": ev.time_id,
+            "nome_jogador": ev.jogador.nome if ev.jogador else None,
+            "nome_time": ev.time.nome if ev.time else None,
+        })
+
+    return jsonify(eventos), 200
+
 @partidas_bp.route('/partidas/<int:id>/sumula', methods=['GET'])
 @jwt_required()
 def obter_sumula(id):
@@ -270,7 +362,7 @@ def obter_sumula(id):
     
     # Formata eventos
     eventos = []
-    for ev in partida.eventos:
+    for ev in sorted(partida.eventos, key=lambda e: (e.minuto, e.id)):
         eventos.append({
             "tipo": ev.tipo,
             "minuto": ev.minuto,

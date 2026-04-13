@@ -9,7 +9,7 @@ import '../../models/campeonato.dart';
 import '../widgets/state_widgets.dart';
 import '../widgets/status_chip.dart';
 
-/// Tela Principal – Lista de Campeonatos (Seção 4.2 - RF 03, RF 15)
+/// Tela Principal – Lista de Campeonatos (Seção 4.2 - RF 03, RF 12, RF 15)
 class CampeonatosScreen extends StatefulWidget {
   const CampeonatosScreen({super.key});
 
@@ -44,7 +44,13 @@ class _CampeonatosScreenState extends State<CampeonatosScreen> {
       appBar: AppBar(
         title: const Text('Gestão de Ligas'),
         actions: [
-          // Saudação e logout
+          // Botão de perfil (RF 12)
+          IconButton(
+            icon: const Icon(Icons.account_circle_outlined),
+            tooltip: 'Meu Perfil',
+            onPressed: () => context.push('/perfil'),
+          ),
+          // Logout
           Padding(
             padding: const EdgeInsets.only(right: 8),
             child: IconButton(
@@ -138,12 +144,28 @@ class _CampeonatosScreenState extends State<CampeonatosScreen> {
     }
 
     if (provider.campeonatos.isEmpty) {
+      final isAdmin = context.read<AuthProvider>().isAdmin;
+      final isBusca = provider.busca.isNotEmpty;
       return EmptyState(
         icon: Icons.emoji_events_outlined,
         title: 'Nenhum campeonato encontrado',
-        subtitle: provider.busca.isNotEmpty
+        subtitle: isBusca
             ? 'Tente buscar com outros termos'
-            : 'Crie o primeiro campeonato!',
+            : isAdmin
+                ? 'Crie o primeiro campeonato para começar!'
+                : 'Aguarde o administrador criar um campeonato.',
+        // Botão de ação para admins quando não há busca ativa
+        action: isAdmin && !isBusca
+            ? ElevatedButton.icon(
+                onPressed: () => context.push('/campeonatos/criar'),
+                icon: const Icon(Icons.add),
+                label: const Text('Criar Campeonato'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                ),
+              )
+            : null,
       );
     }
 
@@ -173,6 +195,15 @@ class _CampeonatoCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         onTap: () => context.push('/campeonato/${campeonato.id}'),
         onLongPress: () async {
+          final isAdmin = context.read<AuthProvider>().isAdmin;
+          if (!isAdmin) {
+            DialogHelper.showError(
+              context,
+              'Apenas administradores podem excluir campeonatos.',
+            );
+            return;
+          }
+
           final confirm = await DialogHelper.showConfirmation(
                   context,
                   title: 'Remover',

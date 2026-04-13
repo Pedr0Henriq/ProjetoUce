@@ -16,9 +16,17 @@ class PartidaRepository {
 
   PartidaRepository({required this.dao, required this.campeonatoRepository, required this.api});
 
+  Future<void> _upsertPartida(db.PartidasCompanion companion) async {
+    final updated = await dao.atualizarPartida(companion);
+    if (!updated) {
+      await dao.criarPartida(companion);
+    }
+  }
+
   domain.Partida _mapPartidaToDomain(PartidaComDetalhes detalhe) {
+    final status = detalhe.partida.status.toLowerCase();
     domain.StatusPartida statusDomain;
-    switch (detalhe.partida.status) {
+    switch (status) {
       case 'em_andamento':
         statusDomain = domain.StatusPartida.emAndamento;
         break;
@@ -84,7 +92,7 @@ class PartidaRepository {
       final partidasApi = list.map((e) => domain.Partida.fromJson(e)).toList();
 
       for (var partida in partidasApi) {
-        await dao.atualizarPartida(_domainToCompanion(partida));
+        await _upsertPartida(_domainToCompanion(partida));
       }
 
       final dadosDrift = await dao.obterPartidasPorCampeonato(campeonatoId);
@@ -102,7 +110,7 @@ class PartidaRepository {
         response as Map<String, dynamic>,
       );
 
-      await dao.atualizarPartida(_domainToCompanion(partidaApi));
+      await _upsertPartida(_domainToCompanion(partidaApi));
 
       final detalhe = await dao.obterPartidaPorId(id);
       return detalhe != null ? _mapPartidaToDomain(detalhe) : null;
@@ -113,28 +121,29 @@ class PartidaRepository {
   }
 
   Future<void> gerarCalendario(int campeonatoId) async {
-    try {
     final campeonato = await campeonatoRepository.buscarPorId(campeonatoId);
-    debugPrint('${TipoCampeonato.of(campeonato.tipo.label).toUpperCase()}');
-    final response = await api.post('/campeonatos/$campeonatoId/gerar-calendario', {
-      'tipo_geracao': TipoCampeonato.of(campeonato.tipo.label).toUpperCase(),
-      'data_primeira_rodada': campeonato.dataInicio.toIso8601String().split('T')[0]
-    });
+    final tipoGeracao = campeonato.tipo == TipoCampeonato.pontoCorrido
+        ? 'PONTOS_CORRIDOS'
+        : 'ELIMINATORIA';
 
-    debugPrint('Resposta: $response');
-    } catch (e,stack) {
-    debugPrint(e.toString());
-     debugPrintStack(stackTrace: stack);
-    }
+    await api.post('/campeonatos/$campeonatoId/gerar-calendario', {
+      'tipo_geracao': tipoGeracao,
+      'data_primeira_rodada': campeonato.dataInicio.toIso8601String().split('T')[0],
+    });
   }
 
   Future<domain.Partida> criar(Map<String, dynamic> dados) async {
-    final response = await api.post('/partidas', dados);
+    final campeonatoId = dados['campeonato_id'];
+    if (campeonatoId == null) {
+      throw ArgumentError('campeonato_id é obrigatório para criar partida.');
+    }
+
+    final response = await api.post('/campeonatos/$campeonatoId/partidas', dados);
     final novaPartida = domain.Partida.fromJson(
       response as Map<String, dynamic>,
     );
 
-    await dao.atualizarPartida(_domainToCompanion(novaPartida));
+    await _upsertPartida(_domainToCompanion(novaPartida));
     return novaPartida;
   }
 
@@ -144,7 +153,7 @@ class PartidaRepository {
       response as Map<String, dynamic>,
     );
 
-    await dao.atualizarPartida(_domainToCompanion(partidaAtualizada));
+    await _upsertPartida(_domainToCompanion(partidaAtualizada));
     return partidaAtualizada;
   }
 
@@ -157,19 +166,28 @@ class PartidaRepository {
     int partidaId,
     Map<String, dynamic> resultadoMap,
   ) async {
-    await api.post('/partidas/$partidaId/resultado', resultadoMap);
+    final response = await api.post('/partidas/$partidaId/resultado', resultadoMap);
+    final data = response is Map<String, dynamic>
+        ? response
+        : <String, dynamic>{};
 
-    final companion = db.ResultadosCompanion.insert(
-      partidaId: partidaId,
-      golsMandante: resultadoMap['gols_mandante'] as int,
-      golsVisitante: resultadoMap['gols_visitante'] as int,
-      registradoPor: resultadoMap['registrado_por'] as int,
-      registradoEm: DateTime.parse(
-        resultadoMap['registrado_em'] ?? DateTime.now().toIso8601String(),
-      ),
-    );
+    final registradoPorRaw = data['registrado_por'];
+    final registradoPor = registradoPorRaw is int
+        ? registradoPorRaw
+        : int.tryParse(registradoPorRaw?.toString() ?? '');
+    final registradoEm = DateTime.tryParse(data['registrado_em']?.toString() ?? '');
 
-    await dao.registrarResultado(companion);
+    if (registradoPor != null && registradoPor > 0) {
+      final companion = db.ResultadosCompanion.insert(
+        partidaId: partidaId,
+        golsMandante: resultadoMap['gols_mandante'] as int,
+        golsVisitante: resultadoMap['gols_visitante'] as int,
+        registradoPor: registradoPor,
+        registradoEm: registradoEm ?? DateTime.now(),
+      );
+
+      await dao.registrarResultado(companion);
+    }
 
     final partidaAtual = await dao.obterPartidaPorId(partidaId);
     if (partidaAtual != null) {

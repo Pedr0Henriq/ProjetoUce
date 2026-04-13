@@ -25,6 +25,7 @@ class Usuario(BaseModel):
     email = db.Column(db.String(120), unique=True, nullable=False)
     senha_hash = db.Column(db.String(255), nullable=False) # Mudamos o nome para deixar claro que é o hash
     perfil = db.Column(db.String(20), nullable=False, default='VIEWER')
+    ativo = db.Column(db.Boolean, nullable=False, default=True)
 
     def set_senha(self, senha_texto_plano):
         """Gera o hash da senha e salva no atributo senha_hash"""
@@ -40,6 +41,7 @@ class Usuario(BaseModel):
             "nome": self.nome,
             "email": self.email,
             "perfil": self.perfil,
+            "ativo": self.ativo,
             "criado_em": self.criado_em.isoformat() if self.criado_em else None
         }
 

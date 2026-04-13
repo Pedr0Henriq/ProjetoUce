@@ -5,6 +5,7 @@ class Usuario {
   final String nome;
   final String email;
   final PerfilUsuario perfil;
+  final bool ativo;
   final DateTime criadoEm;
 
   const Usuario({
@@ -12,6 +13,7 @@ class Usuario {
     required this.nome,
     required this.email,
     required this.perfil,
+    this.ativo = true,
     required this.criadoEm,
   });
 
@@ -23,6 +25,7 @@ class Usuario {
       perfil: json['perfil'] == 'ADMIN'
           ? PerfilUsuario.administrador
           : PerfilUsuario.analista,
+      ativo: (json['ativo'] as bool?) ?? true,
       criadoEm: DateTime.parse(json['criado_em'] as String),
     );
   }
@@ -35,6 +38,7 @@ class Usuario {
       'perfil': perfil == PerfilUsuario.administrador
           ? 'ADMIN'
           : 'VIEWER',
+      'ativo': ativo,
       'criado_em': criadoEm.toIso8601String(),
     };
   }

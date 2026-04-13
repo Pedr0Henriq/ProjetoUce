@@ -1,19 +1,49 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
 
 /// Constantes da aplicação
 class AppConstants {
   AppConstants._();
 
-  // API — detecta plataforma automaticamente
-  // Para dispositivo físico Android, usar o IP da máquina na rede local
-  static const String _hostIP = '192.168.1.5'; // IP da máquina na rede (Ethernet/Wi-Fi)
+  // API
+  // Valores podem ser sobrescritos em runtime via --dart-define.
+  // Compatibilidade: também aceita API_BASE_URL completo.
+  // Exemplo: --dart-define=API_HOST=192.168.1.50 --dart-define=API_PORT=5005
+  // Exemplo alternativo: --dart-define=API_BASE_URL=http://192.168.1.50:5005/v1
+  static const String _baseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: '',
+  );
+
+  static const String _port = String.fromEnvironment(
+    'API_PORT',
+    defaultValue: '5005',
+  );
+
+  static String get _hostIP {
+    const envHost = String.fromEnvironment('API_HOST', defaultValue: '');
+    if (envHost.isNotEmpty) return envHost;
+    
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      return '10.0.2.2';
+    }
+    // Default para iOS Simulator, macOS e web locais
+    return '127.0.0.1';
+  }
 
   static String get apiBaseUrl {
-    if (kIsWeb) {
-      return 'http://localhost:5000/v1'; // Flutter Web
+    final explicitBaseUrl = _baseUrl.trim();
+    if (explicitBaseUrl.isNotEmpty) {
+      final normalized = explicitBaseUrl.endsWith('/')
+          ? explicitBaseUrl.substring(0, explicitBaseUrl.length - 1)
+          : explicitBaseUrl;
+      return normalized.endsWith('/v1') ? normalized : '$normalized/v1';
     }
-    // Android (físico ou emulator) e demais plataformas → IP da rede local
-    return 'http://$_hostIP:5000/v1';
+
+    if (kIsWeb) {
+      return 'http://localhost:$_port/v1'; // Flutter Web
+    }
+    // Android (físico ou emulador) e demais plataformas
+    return 'http://$_hostIP:$_port/v1';
   }
 
   static const Duration apiTimeout = Duration(seconds: 15);

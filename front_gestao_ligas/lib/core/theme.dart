@@ -23,6 +23,28 @@ class AppTheme {
   static const Color cartaoAmareloColor = Color(0xFFFFC107);
   static const Color cartaoVermelhoColor = Color(0xFFD32F2F);
 
+  // ── Constantes de animação ──────────────────────────────────────────────────
+  /// Duração rápida — micro-interações (200 ms)
+  static const Duration animFast = Duration(milliseconds: 200);
+
+  /// Duração padrão — transições de tela (350 ms)
+  static const Duration animNormal = Duration(milliseconds: 350);
+
+  /// Duração lenta — animações elaboradas (600 ms)
+  static const Duration animSlow = Duration(milliseconds: 600);
+
+  /// Duração do splash screen (1800 ms)
+  static const Duration splashDuration = Duration(milliseconds: 1800);
+
+  /// Curva padrão para entradas/saídas suaves
+  static const Curve animCurveStandard = Curves.easeInOut;
+
+  /// Curva para elementos que entram na tela
+  static const Curve animCurveEnter = Curves.easeOut;
+
+  /// Curva com efeito mola (logo no splash)
+  static const Curve animCurveSpring = Curves.elasticOut;
+
   static ColorScheme get _colorScheme => ColorScheme.fromSeed(
         seedColor: primaryColor,
         brightness: Brightness.light,
