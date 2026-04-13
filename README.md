@@ -234,3 +234,6 @@ Credenciais Negadas ou 401s:
 <img src="https://github.com/user-attachments/assets/3ca256c2-a80d-4b6f-9295-245624b2e925" width="250"/>
 <img src="https://github.com/user-attachments/assets/4c4e5ee9-2b1b-4810-a8d3-89d2856c5fb0" width="250"/>
 <img src="https://github.com/user-attachments/assets/44195e8c-fbe8-4ba4-a14d-1cf61f9ab30e" width="250"/>
+<img src="https://github.com/user-attachments/assets/96eedd80-7709-4da6-9e1d-30f01d017fc4" width="250"/>
+<img src="https://github.com/user-attachments/assets/4ff08ee6-ec5f-4d06-b46f-05ebe0eff194" width="250"/>
+<img src="https://github.com/user-attachments/assets/8536d431-6a31-4c63-905e-f1204179d3c0" width="250"/>
