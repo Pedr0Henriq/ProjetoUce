@@ -88,3 +88,25 @@ def desativar_usuario(usuario_id):
         'mensagem': 'Usuário desativado com sucesso.',
         'usuario': usuario.to_dict(),
     }), 200
+
+
+@usuarios_bp.route('/usuarios/<int:usuario_id>/reativar', methods=['POST'])
+@jwt_required()
+def reativar_usuario(usuario_id):
+    """Reativa um usuário previamente desativado."""
+    usuario_id_logado = get_jwt_identity()
+    if not _is_admin_global(usuario_id_logado):
+        return jsonify({'erro': 'Acesso negado. Apenas administradores podem reativar usuários.'}), 403
+
+    usuario = Usuario.query.get_or_404(usuario_id)
+
+    if usuario.ativo:
+        return jsonify({'erro': 'Este usuário já está ativo.'}), 400
+
+    usuario.ativo = True
+    db.session.commit()
+
+    return jsonify({
+        'mensagem': 'Usuário reativado com sucesso.',
+        'usuario': usuario.to_dict(),
+    }), 200

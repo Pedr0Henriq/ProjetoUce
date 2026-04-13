@@ -102,6 +102,7 @@ Observação: contas desativadas não conseguem autenticar e tokens antigos são
 | GET | `/usuarios` | Listar usuários do sistema | JWT (ADMIN) |
 | POST | `/usuarios/:id/promover` | Promover usuário para ADMIN | JWT (ADMIN) |
 | POST | `/usuarios/:id/desativar` | Desativar usuário (soft-disable) | JWT (ADMIN) |
+| POST | `/usuarios/:id/reativar` | Reativar usuário desativado | JWT (ADMIN) |
 
 ### Campeonatos — `/v1/campeonatos`
 

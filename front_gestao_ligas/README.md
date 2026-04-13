@@ -8,7 +8,7 @@ Aplicativo Flutter para consumo da API do projeto, com foco em gerenciamento de 
 - Novas contas sao sempre criadas como Visualizador (Analista)
 - Acoes de escrita/configuracao/exclusao ficam restritas a Administrador
 - Rotas administrativas no app sao bloqueadas para visualizador
-- Administrador possui painel para listar, promover e desativar usuarios
+- Administrador possui painel para listar, promover, desativar e reativar usuarios
 
 ## 1. Requisitos
 

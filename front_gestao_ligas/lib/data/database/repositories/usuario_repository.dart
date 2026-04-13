@@ -149,6 +149,12 @@ class UsuarioRepository {
     return domain.Usuario.fromJson(data['usuario'] as Map<String, dynamic>);
   }
 
+  Future<domain.Usuario> reativarUsuario(int usuarioId) async {
+    final response = await api.post('/usuarios/$usuarioId/reativar', {});
+    final data = response as Map<String, dynamic>;
+    return domain.Usuario.fromJson(data['usuario'] as Map<String, dynamic>);
+  }
+
   // ── RF 17 — Administradores Adicionais ────────────────────────────────────
 
   /// RF 17 — Retorna todos os co-administradores de um campeonato.

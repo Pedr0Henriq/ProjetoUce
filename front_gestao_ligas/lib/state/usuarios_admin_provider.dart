@@ -70,6 +70,24 @@ class UsuariosAdminProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> reativarUsuario(int usuarioId) async {
+    _usuarioEmAcao = usuarioId;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final usuarioAtualizado = await _repo.reativarUsuario(usuarioId);
+      _atualizarUsuarioNaLista(usuarioAtualizado);
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      return false;
+    } finally {
+      _usuarioEmAcao = null;
+      notifyListeners();
+    }
+  }
+
   void limparErro() {
     _error = null;
     notifyListeners();

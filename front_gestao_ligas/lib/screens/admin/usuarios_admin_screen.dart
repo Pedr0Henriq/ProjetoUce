@@ -66,6 +66,27 @@ class _UsuariosAdminScreenState extends State<UsuariosAdminScreen> {
     }
   }
 
+  Future<void> _reativarUsuario(Usuario usuario) async {
+    final confirm = await DialogHelper.showConfirmation(
+      context,
+      title: 'Reativar Usuário',
+      message: 'Deseja reativar ${usuario.nome}? O acesso voltará a ser permitido.',
+      confirmText: 'Reativar',
+    );
+
+    if (!confirm || !mounted) return;
+
+    final provider = context.read<UsuariosAdminProvider>();
+    final success = await provider.reativarUsuario(usuario.id);
+
+    if (!mounted) return;
+    if (success) {
+      DialogHelper.showSuccess(context, 'Usuário reativado com sucesso.');
+    } else if (provider.error != null) {
+      DialogHelper.showError(context, provider.error!);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<UsuariosAdminProvider>();
@@ -163,6 +184,8 @@ class _UsuariosAdminScreenState extends State<UsuariosAdminScreen> {
                           _promoverUsuario(usuario);
                         } else if (value == 'desativar') {
                           _desativarUsuario(usuario);
+                        } else if (value == 'reativar') {
+                          _reativarUsuario(usuario);
                         }
                       },
                       itemBuilder: (_) => _buildAcoesMenu(
@@ -203,6 +226,19 @@ class _UsuariosAdminScreenState extends State<UsuariosAdminScreen> {
           child: ListTile(
             leading: Icon(Icons.person_off, color: Colors.red),
             title: Text('Desativar', style: TextStyle(color: Colors.red)),
+            dense: true,
+          ),
+        ),
+      );
+    }
+
+    if (!usuario.ativo) {
+      items.add(
+        const PopupMenuItem<String>(
+          value: 'reativar',
+          child: ListTile(
+            leading: Icon(Icons.person_add_alt_1, color: Colors.green),
+            title: Text('Reativar', style: TextStyle(color: Colors.green)),
             dense: true,
           ),
         ),
